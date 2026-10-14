@@ -1,9 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { publicOrigin } from "@/lib/public-origin";
 import { createClient } from "@/lib/supabase/server";
 
 /** Opens (or reuses) the conversation with a companion: /app/chat/new?c=<slug>. */
 export async function GET(request: NextRequest) {
-  const { origin, searchParams } = request.nextUrl;
+  const { searchParams } = request.nextUrl;
+  const origin = publicOrigin(request);
   const slug = searchParams.get("c") ?? "";
   const here = `/app/chat/new?c=${encodeURIComponent(slug)}`;
   const supabase = await createClient();
