@@ -21,7 +21,7 @@ export const hasVoiceProvider = () => voiceProviders().length > 0;
 
 export async function speak(
   text: string,
-  opts: { gender: string; voiceId: string | null; chatLanguage: string; userId: string; feature: "voice_note" | "call_tts" },
+  opts: { gender: string; voiceId: string | null; chatLanguage: string; userId: string | null; feature: "voice_note" | "call_tts" },
 ) {
   let lastError: unknown;
   for (const p of voiceProviders()) {
@@ -40,7 +40,7 @@ export async function speak(
   throw lastError ?? new Error("no voice provider configured");
 }
 
-export async function transcribe(audio: Blob, filename: string, userId: string) {
+export async function transcribe(audio: Blob, filename: string, userId: string | null) {
   const minutes = Math.max(0.1, audio.size / (16_000 * 60)); // rough: ~16 KB/s compressed speech
   let lastError: unknown;
   for (const p of voiceProviders()) {

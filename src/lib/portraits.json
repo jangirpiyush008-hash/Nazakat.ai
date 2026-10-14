@@ -1,1 +1,210 @@
-{}
+{
+  "tara": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/tara/main.jpg?v=mv8kqgbd",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/tara/1.jpg?v=mv8kqgbd",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/tara/2.jpg?v=mv8kqgbd",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/tara/3.jpg?v=mv8kqgbd"
+    ]
+  },
+  "zoya": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/zoya/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/zoya/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/zoya/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/zoya/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "arjun": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/arjun/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/arjun/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/arjun/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/arjun/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "meera": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/meera/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/meera/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/meera/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/meera/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "kabir": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/kabir/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/kabir/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/kabir/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/kabir/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "vikram": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/vikram/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/vikram/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/vikram/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/vikram/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "rhea": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/rhea/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/rhea/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/rhea/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/rhea/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "dev": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/dev/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/dev/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/dev/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/dev/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "ishani": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/ishani/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/ishani/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/ishani/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/ishani/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "anaya": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/anaya/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/anaya/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/anaya/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/anaya/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "kiara": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/kiara/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/kiara/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/kiara/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/kiara/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "naina": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/naina/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/naina/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/naina/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/naina/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "sana": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/sana/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/sana/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/sana/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/sana/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "riya": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/riya/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/riya/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/riya/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/riya/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "aisha": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/aisha/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/aisha/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/aisha/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/aisha/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "priya": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/priya/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/priya/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/priya/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/priya/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "myra": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/myra/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/myra/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/myra/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/myra/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "alisha": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/alisha/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/alisha/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/alisha/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/alisha/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "simran": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/simran/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/simran/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/simran/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/simran/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "nisha": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/nisha/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/nisha/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/nisha/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/nisha/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "diya": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/diya/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/diya/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/diya/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/diya/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "kavya": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/kavya/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/kavya/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/kavya/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/kavya/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "ira": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/ira/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/ira/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/ira/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/ira/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "mahi": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/mahi/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/mahi/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/mahi/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/mahi/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "tanya": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/tanya/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/tanya/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/tanya/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/tanya/3.jpg?v=mv8kz3pc"
+    ]
+  },
+  "leela": {
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/leela/main.jpg?v=mv8kz3pc",
+    "gallery": [
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/leela/1.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/leela/2.jpg?v=mv8kz3pc",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/leela/3.jpg?v=mv8kz3pc"
+    ]
+  }
+}

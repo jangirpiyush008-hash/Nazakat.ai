@@ -10,7 +10,7 @@ import type { ChatEvent, ErrorCode } from "@/app/api/chat/route";
 import { MemoryPanel, type Memory } from "./memory-panel";
 import { MediaSheet } from "./media-sheet";
 import { ProfilePanel, type PanelCompanion } from "./profile-panel";
-import { photosOf } from "@/components/photo-carousel";
+import { photosOf } from "@/lib/companions";
 
 export type MediaRef = { id: string; kind: "image" | "video"; url: string | null; duration: number | null };
 type Msg = {

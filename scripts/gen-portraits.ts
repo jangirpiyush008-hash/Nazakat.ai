@@ -58,7 +58,7 @@ const looks: Record<"women" | "men" | "anime", string[]> = {
   ],
   women: [
     "in a sheer chiffon saree with a sleeveless blouse on a rooftop at golden hour, city lights behind",
-    "in a stylish bikini on a Goa beach at sunset, wet hair, laughing",
+    "in a stylish bikini on a Goa beach at sunset, same hairstyle, soft confident smile",
     "in a black satin slip dress in a candle-lit lounge, glass of wine, looking over her shoulder",
     "in an embroidered lehenga with a backless choli at a wedding sangeet, fairy lights",
     "in a silk camisole and shorts sitting on a bed with soft morning light, messy hair, cozy",
@@ -71,7 +71,7 @@ const looks: Record<"women" | "men" | "anime", string[]> = {
     "in a denim jacket and crop top on a scooter on a coastal road",
   ],
   men: [
-    "shirtless on a beach at sunset, wet hair, laughing, athletic build",
+    "in an open linen shirt on a beach at sunset, same hairstyle, relaxed smile",
     "in a tailored black suit at a rooftop bar at night, city lights",
     "in a white linen kurta in a sunlit courtyard",
     "in a fitted t-shirt at a gym, glowing skin, confident smile",
@@ -137,8 +137,14 @@ const claude = CHECK_KEY ? new Anthropic({ apiKey: CHECK_KEY, timeout: 60_000, m
 async function check(url: string): Promise<string | null> {
   if (!claude) {
     // The live server runs the same check (Claude Haiku via SpicyAPI).
-    const v = await spicy({ action: "check", url });
-    return v.ok === true ? null : String(v.reason ?? "unavailable");
+    // A temporary checker outage is retried; it never lets a photo through.
+    for (let k = 0; k < 3; k++) {
+      const v = await spicy({ action: "check", url }).catch(() => ({ ok: null }));
+      if (v.ok === true) return null;
+      if (v.ok === false) return String(v.reason);
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+    return "unavailable";
   }
   const res = await claude.messages.create({
     model: process.env.IMAGE_CHECK_MODEL || "claude-haiku-5-5",

@@ -782,6 +782,9 @@ export function findCompanions(f: CompanionFilters = {}) {
   );
 }
 
+/** Main portrait first, then the extra photos of the same face. */
+export const photosOf = (c: { portrait?: string; gallery?: string[] }) => [...(c.portrait ? [c.portrait] : []), ...(c.gallery ?? [])];
+
 export function getCompanion(slug: string) {
   return companions.find((c) => c.slug === slug) ?? null;
 }

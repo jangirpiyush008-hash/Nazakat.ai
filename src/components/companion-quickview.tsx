@@ -4,8 +4,8 @@ import Link from "next/link";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { Camera, MessageCircle, Phone, Share2, X } from "lucide-react";
 import type { Companion } from "@/lib/companions";
-import { languageLabels } from "@/lib/companions";
-import { PhotoCarousel, photosOf } from "./photo-carousel";
+import { languageLabels, photosOf } from "@/lib/companions";
+import { PhotoCarousel } from "./photo-carousel";
 
 const QuickView = createContext<((c: Companion) => void) | null>(null);
 /** Returns an opener when a QuickViewProvider is mounted, else null (cards then just link). */

@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import { brand } from "@/config/brand";
 import { getCapabilities } from "@/config/features";
 import { sparkCosts } from "@/config/pricing";
-import { companions, getCompanion, languageLabels } from "@/lib/companions";
-import { Portrait } from "@/components/character-card";
+import { companions, getCompanion, languageLabels, photosOf } from "@/lib/companions";
+import { PhotoCarousel } from "@/components/photo-carousel";
 import { PrimaryLink } from "@/components/ui";
 
 type Params = Promise<{ slug: string }>;
@@ -42,8 +42,10 @@ export default async function CompanionPage({ params }: { params: Params }) {
       <main className="mx-auto grid max-w-[1200px] md:grid-cols-[minmax(0,480px)_1fr] md:gap-12 md:px-16 md:py-12">
         {/* Hero */}
         <section className="relative h-[520px] overflow-hidden md:sticky md:top-28 md:h-[640px] md:rounded-3xl">
-          <Portrait companion={c} sizes="(max-width: 768px) 100vw, 480px" priority />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,7,9,.4),transparent_25%,transparent_55%,#0A0709_100%)]" />
+          <div className="absolute inset-0">
+            <PhotoCarousel photos={photosOf(c)} alt={`${c.name}, AI character`} wash={c.wash} counter className="h-full [&>div>div]:rounded-none" sizes="(max-width: 768px) 100vw, 480px" />
+          </div>
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(10,7,9,.4),transparent_25%,transparent_55%,#0A0709_100%)]" />
           <Link
             href="/explore"
             aria-label="Back to explore"
@@ -51,13 +53,13 @@ export default async function CompanionPage({ params }: { params: Params }) {
           >
             ←
           </Link>
-          <div className="absolute inset-x-5 bottom-0 flex flex-col gap-2 pb-2 md:bottom-6 md:left-6">
+          <div className="pointer-events-none absolute inset-x-5 bottom-0 flex flex-col gap-2 pb-2 md:bottom-6 md:left-6">
             <span className="inline-flex h-6 items-center self-start rounded-full bg-white/10 px-2.5 text-[11px] font-semibold backdrop-blur-md">
               AI character · fictional
             </span>
             <h1 className="font-display text-5xl font-light leading-none">{c.name}</h1>
             <p className="text-[13px] text-ink-2">
-              {c.age} · {c.occupation} · {c.city}
+              {c.age} · {c.occupation} · {c.city} · ID {c.modelId}
             </p>
           </div>
         </section>

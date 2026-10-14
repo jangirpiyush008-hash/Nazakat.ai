@@ -105,5 +105,3 @@ export function PhotoCarousel({
     </div>
   );
 }
-
-export const photosOf = (c: { portrait?: string; gallery?: string[] }) => [...(c.portrait ? [c.portrait] : []), ...(c.gallery ?? [])];
