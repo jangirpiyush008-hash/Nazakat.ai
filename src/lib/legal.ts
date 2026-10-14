@@ -1,50 +1,490 @@
 /**
- * Legal & trust page registry. Every page is a DRAFT pending Indian counsel
- * review. Company facts are TODO placeholders and the launch gate
- * (docs/COMPLIANCE_REGISTER.md) must fail while any remain.
- * Do NOT write invented legal text here — outline only.
+ * Legal & trust pages. Drafted against Indian law current at 14 Oct 2026
+ * (IT Act 2000, IT Rules 2021 as amended, DPDP Act 2023 and DPDP Rules 2025,
+ * Consumer Protection Act 2019 and E-Commerce Rules 2020, CCPA dark-pattern
+ * guidelines 2023, RBI e-mandate directions, CGST Act). This is a product
+ * draft, NOT legal advice — have Indian counsel review before launch and then
+ * set `status: "approved"` and `lastReviewed`.
+ *
+ * Tokens: {{brand}} plus any key of src/config/company.ts, e.g. {{legalName}}.
+ * Empty company facts render as visible placeholders.
  */
 
 export type LegalStatus = "draft" | "in_review" | "approved";
+export type LegalSection = { heading: string; body: string[] };
 
 export type LegalPage = {
   slug: string;
   title: string;
   group: "Trust" | "Legal";
   summary: string;
-  sections: string[];
+  sections: LegalSection[];
   status: LegalStatus;
   version: string;
   lastReviewed: string | null;
 };
 
-const draft = { status: "draft" as const, version: "0.1-draft", lastReviewed: null };
+const v = { status: "draft" as const, version: "1.0", lastReviewed: null };
 
-export const companyFacts = {
-  legalEntity: "TODO: registered legal entity name",
-  registeredOffice: "TODO: registered office address",
-  grievanceOfficer: "TODO: grievance officer name & designation",
-  grievanceEmail: "TODO: grievance contact email",
-  effectiveDate: "TODO: effective date",
-};
+const grievanceBlock = [
+  "Grievance Officer: {{grievanceOfficerName}}, {{grievanceOfficerDesignation}}, {{legalName}}.",
+  "Email: {{grievanceEmail}} · Phone: {{grievancePhone}} · Address: {{registeredAddress}}.",
+];
 
 export const legalPages: LegalPage[] = [
-  { slug: "terms", title: "Terms of Use", group: "Legal", summary: "The rules for using the service, who can use it, and what happens if those rules are broken.", sections: ["Service scope", "AI disclosure", "Eligibility (18+)", "Acceptable use", "Account suspension", "Intellectual property", "Limitations", "Governing law"], ...draft },
-  { slug: "privacy", title: "Privacy Policy", group: "Legal", summary: "What data we collect, why, who processes it, how long we keep it and how to exercise your rights.", sections: ["Data categories", "Purposes and legal basis", "Processors and transfers", "Retention", "Your rights", "Security", "Grievance contact", "How to make a request"], ...draft },
-  { slug: "cookies", title: "Cookies & Tracking", group: "Legal", summary: "Essential vs optional technologies and how to change your choice.", sections: ["Essential technologies", "Optional analytics", "Your preferences", "Withdrawing consent"], ...draft },
-  { slug: "ai-disclosure", title: "AI Companion Disclosure", group: "Trust", summary: "Every companion is an AI-generated fictional character. Not a human, therapist, doctor or emergency service.", sections: ["Characters are AI and fictional", "Limitations", "No human presence", "Not therapy, medical or emergency support"], ...draft },
-  { slug: "community-guidelines", title: "Community Guidelines", group: "Trust", summary: "What is and isn't allowed, and how we enforce it.", sections: ["Acceptable use", "Prohibited behaviour", "Reporting", "Enforcement and appeals"], ...draft },
-  { slug: "content-safety", title: "Content Safety", group: "Trust", summary: "Prohibited content and how reporting, blocking, takedown and appeals work.", sections: ["Prohibited content", "Reporting and blocking", "Takedown", "Appeals"], ...draft },
-  { slug: "generation-policy", title: "Image, Video & Voice Generation Policy", group: "Trust", summary: "Restrictions on generated media, real-person consent, impersonation, labels and deletion.", sections: ["Restrictions", "Real-person consent and impersonation", "Child safety", "Labels", "Deletion"], ...draft },
-  { slug: "copyright-and-takedown", title: "Copyright, Impersonation & Takedown", group: "Legal", summary: "How to report infringing or impersonating content.", sections: ["What to report", "How to file a notice", "Counter-notice", "Repeat infringers"], ...draft },
-  { slug: "grievance-redressal", title: "Grievance Redressal", group: "Legal", summary: "How to raise a complaint, acknowledgement and resolution timelines.", sections: ["Designated contact", "Complaint channels", "Acknowledgement", "Handling process"], ...draft },
-  { slug: "refunds-and-cancellation", title: "Refunds & Cancellation", group: "Legal", summary: "Eligibility, processing, subscription cancellation and failed generations or payments.", sections: ["Eligibility", "Processing", "Subscription cancellation", "Failed generation or payment", "Statutory rights"], ...draft },
-  { slug: "credits", title: "Sparks & Credits", group: "Legal", summary: "How Sparks are granted, used, refunded and when they expire.", sections: ["What Sparks are", "Validity and expiry", "Usage", "Grants and promos", "Refunds", "Errors and disputes"], ...draft },
-  { slug: "data-retention-and-deletion", title: "Data Retention & Deletion", group: "Legal", summary: "Retention schedule, export, account deletion and lawful retention exceptions.", sections: ["Retention schedule", "Export", "Account deletion", "Backups", "Retention exceptions"], ...draft },
-  { slug: "security", title: "Security & Vulnerability Reporting", group: "Trust", summary: "How to report a security issue to us.", sections: ["Reporting route", "Scope", "Safe harbour", "Contact"], ...draft },
-  { slug: "accessibility", title: "Accessibility Statement", group: "Trust", summary: "Our accessibility commitment, known limitations and how to contact us.", sections: ["Commitment", "Known limitations", "Contact"], ...draft },
-  { slug: "child-safety", title: "Child Safety", group: "Trust", summary: "Strict prohibition on sexual content involving minors or minor-coded characters.", sections: ["Zero tolerance", "Age requirements", "Detection and reporting", "Cooperation with authorities"], ...draft },
-  { slug: "ai-media-labelling", title: "AI Media Labelling", group: "Trust", summary: "How AI-generated outputs are labelled and why labels must not be removed.", sections: ["When labels apply", "Labels and metadata", "Provenance", "Restrictions on removal"], ...draft },
+  {
+    slug: "terms",
+    title: "Terms of Use",
+    group: "Legal",
+    summary: "The agreement between you and {{legalName}} for using {{brand}}: who can use it, what's allowed, how paid features work and what happens if the rules are broken.",
+    sections: [
+      { heading: "About these terms", body: [
+        "{{brand}} (the \"Service\") is operated by {{legalName}}, a company incorporated in India with CIN {{cin}} and registered office at {{registeredAddress}} (\"we\", \"us\").",
+        "These Terms, together with our Privacy Policy, Community Guidelines, Content Safety policy, Refunds & Cancellation policy and Sparks & Credits terms, form a binding agreement between you and us. They are an electronic record under the Information Technology Act, 2000 and do not need a physical or digital signature.",
+        "By creating an account or using the Service you confirm that you have read and agree to these Terms. If you don't agree, please don't use the Service.",
+      ]},
+      { heading: "What the Service is", body: [
+        "{{brand}} lets adults chat with original, fictional characters (\"Companions\") that are generated by artificial intelligence. Some features — such as image generation or voice — may be paid, limited, or available only in some regions.",
+        "Companions are AI. They are not real people, are not monitored live by humans, and do not have feelings, a body or a life outside the Service. Read our AI Companion Disclosure for details.",
+        "The Service is for conversation, entertainment and creativity. It is not therapy, counselling, medical, legal or financial advice, and it is not an emergency service.",
+      ]},
+      { heading: "Eligibility", body: [
+        "You must be at least 18 years old and legally able to enter into a contract under the Indian Contract Act, 1872. The Service is not directed at children and we do not knowingly allow anyone under 18 to use it.",
+        "If we believe an account belongs to someone under 18, we will suspend it and delete the associated data, except where we must keep it by law.",
+        "You may not use the Service if you have previously been banned from it, or if using it is unlawful where you live.",
+      ]},
+      { heading: "Your account", body: [
+        "You sign in with a one-time code sent to your mobile number or email, or with a supported third-party login. Keep access to that number or email secure — you are responsible for activity on your account.",
+        "Give accurate information, and tell us at {{supportEmail}} if you think someone else has accessed your account.",
+        "One person, one account. Accounts are personal and can't be sold or transferred.",
+      ]},
+      { heading: "Acceptable use", body: [
+        "In line with Rule 3(1)(b) of the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021, you must not use the Service to create, upload, share or request any content that: (a) belongs to someone else and you have no right to; (b) is obscene, pornographic, paedophilic, invasive of another's privacy including bodily privacy, or insulting or harassing on the basis of gender; (c) is harmful to children; (d) infringes any patent, trademark, copyright or other proprietary right; (e) deceives or misleads about its origin, or knowingly and intentionally communicates misinformation or information that is patently false; (f) impersonates another person; (g) threatens the unity, integrity, defence, security or sovereignty of India, friendly relations with foreign States, or public order, or incites any offence; (h) contains software viruses or malicious code; (i) is patently false and untrue and written or published with intent to mislead or harass for financial gain or to cause injury; or (j) violates any law in force.",
+        "You must also not: try to make a Companion produce sexually explicit content, or content involving minors or minor-coded characters in any romantic or sexual way; create content depicting or imitating real people without their consent; use the Service to stalk, threaten, or harass anyone; attempt to extract our system instructions, scrape the Service, overload it, bypass limits or safety systems, or resell access; or use the Service to build a competing AI model.",
+        "Our Community Guidelines and Content Safety policy explain these rules in plain language.",
+      ]},
+      { heading: "Your content and AI output", body: [
+        "You keep whatever rights you have in the messages you write. You give us a limited licence to store, process and display them only to run, secure and improve the Service as described in the Privacy Policy.",
+        "AI-generated replies and media are produced automatically and may be inaccurate, inappropriate or similar to output given to others. Don't rely on them for important decisions. Where we label content as AI-generated, you must not remove or alter that label.",
+        "You may use AI output you receive for personal, non-commercial purposes. You must not present it as created by a human, or use it in a way that breaks these Terms or the law.",
+      ]},
+      { heading: "Paid features, Sparks and subscriptions", body: [
+        "Some features need a paid plan or Sparks, our in-app credits. Prices are shown in Indian Rupees and include applicable GST unless stated otherwise. The price, billing interval, renewal terms and cancellation route are shown before you pay.",
+        "Subscriptions renew automatically until cancelled. Recurring payments follow the Reserve Bank of India's e-mandate rules, including a pre-debit notification before each renewal. You can cancel any time in Settings; access continues until the end of the period you paid for.",
+        "Sparks have no cash value, can't be transferred or exchanged for money, and are governed by our Sparks & Credits terms. Refunds are covered by our Refunds & Cancellation policy and your statutory rights as a consumer.",
+      ]},
+      { heading: "Our intellectual property", body: [
+        "The Service — including the {{brand}} name and logo, the Companions' names, personalities, artwork and writing, and our software — belongs to us or our licensors and is protected by Indian and international law. These Terms don't give you any rights in it beyond using the Service as intended.",
+      ]},
+      { heading: "Moderation, suspension and termination", body: [
+        "We use automated systems and human review to detect content and behaviour that breaks these Terms. We may remove content, limit features, or suspend or terminate accounts that break these Terms or the law, and we may report illegal content to authorities where required.",
+        "Where reasonable, we'll tell you why we took action and how to ask us to reconsider. You can appeal through our Grievance Redressal process.",
+        "You can stop using the Service and delete your account at any time from Settings.",
+      ]},
+      { heading: "Disclaimers", body: [
+        "We work hard to keep the Service available, accurate and safe, but it is provided \"as is\" and \"as available\". To the extent permitted by law, we don't promise it will be uninterrupted, error-free, or that AI output will be accurate or suitable for you.",
+        "Nothing in these Terms limits rights you have under the Consumer Protection Act, 2019 or other law that cannot be limited by contract.",
+      ]},
+      { heading: "Limitation of liability", body: [
+        "To the extent permitted by law, we are not liable for indirect, incidental or consequential losses, or for loss of data, profits or goodwill. Our total liability to you for any claim relating to the Service is limited to the amount you paid us in the 12 months before the claim, or ₹1,000, whichever is higher.",
+        "This does not limit liability for fraud, for death or personal injury caused by our negligence, or anything else that can't be limited by law.",
+      ]},
+      { heading: "Indemnity", body: [
+        "If you break these Terms or the law, and that leads to a claim against us, you agree to compensate us for reasonable losses and costs arising from it.",
+      ]},
+      { heading: "Intermediary status", body: [
+        "For content you create or share, we act as an intermediary under Section 79 of the Information Technology Act, 2000 and follow the due-diligence obligations of the IT Rules, 2021, including our grievance redressal mechanism.",
+      ]},
+      { heading: "Changes to these terms", body: [
+        "We may update these Terms as the Service or the law changes. For material changes we'll notify you in the app or by email before they take effect. Continuing to use the Service after that means you accept the updated Terms.",
+      ]},
+      { heading: "Governing law and disputes", body: [
+        "These Terms are governed by the laws of India. Subject to your rights as a consumer to approach the consumer commission where you live, courts at {{jurisdictionCity}} have exclusive jurisdiction.",
+        "Please contact us first — most problems can be solved quickly through support or our Grievance Officer.",
+      ]},
+      { heading: "Contact", body: ["Support: {{supportEmail}}.", ...grievanceBlock] },
+    ],
+    ...v,
+  },
+  {
+    slug: "privacy",
+    title: "Privacy Policy",
+    group: "Legal",
+    summary: "What personal data we collect, why, who we share it with, how long we keep it, and how to use your rights under India's Digital Personal Data Protection Act, 2023.",
+    sections: [
+      { heading: "Who we are", body: [
+        "{{legalName}} (\"we\") is the Data Fiduciary for personal data processed through {{brand}}, under the Digital Personal Data Protection Act, 2023 (\"DPDP Act\") and the Digital Personal Data Protection Rules, 2025. Registered office: {{registeredAddress}}.",
+        "This notice explains our processing in clear terms. You can read it in English; we will add other Indian languages listed in the Eighth Schedule of the Constitution on request at {{privacyEmail}}.",
+      ]},
+      { heading: "Personal data we collect", body: [
+        "Account data: mobile number or email address, sign-in method, and the age confirmation you give at sign-up.",
+        "Profile and preferences: display name, chat language, companion interest, and settings such as memory and discreet mode.",
+        "Conversations: messages you send and AI replies, feedback you give, and reports you file.",
+        "Memories: short facts the Service saves so Companions remember you — for example a nickname or favourite place. You can see, edit and delete every one.",
+        "Consent records: what you agreed to, which version, and when.",
+        "Payment data (when payments are enabled): plan, amounts and transaction status. Card and UPI details are handled by our payment partner, not stored by us.",
+        "Technical data: device and browser type, IP address, approximate city and country derived from it, and security logs.",
+        "We do not ask for, and Companions are instructed not to save, sensitive details such as health, religion, caste, sexual orientation, political views, financial account numbers or passwords.",
+      ]},
+      { heading: "Why we use it", body: [
+        "To provide the Service: create your account, deliver conversations, remember what you ask us to, and apply daily limits — processed on the basis of your consent and to perform our agreement with you.",
+        "To keep people safe: detect abuse, prevent fraud, enforce our Terms, and respond to legal requests — a legitimate use permitted under Section 7 of the DPDP Act where it applies.",
+        "To improve the Service: only with your separate, optional consent to product analytics. We do not use the content of your conversations for advertising.",
+        "To contact you: service messages always; marketing only if you opt in, and you can withdraw at any time.",
+        "We don't sell your personal data.",
+      ]},
+      { heading: "AI processing", body: [
+        "To generate replies, your recent messages, the Companion's character description and your saved memories are sent to our AI model provider. The provider processes them to produce a reply under a contract that restricts its use of the data.",
+        "We don't use your conversations to train our own AI models without your explicit consent.",
+      ]},
+      { heading: "Who we share it with", body: [
+        "Data Processors that help us run the Service, bound by contracts that limit them to our instructions: database and authentication hosting (Supabase, servers in Mumbai, India); website hosting (Vercel); AI model provider (Anthropic); email and SMS delivery; payment processing (when enabled); and analytics (only with your consent).",
+        "Authorities, when required by law — for example a lawful order under the IT Act, 2000 or the Bharatiya Nagarik Suraksha Sanhita, 2023.",
+        "A buyer or successor, if our business is merged or sold, subject to this policy.",
+      ]},
+      { heading: "Transfers outside India", body: [
+        "Some processors, such as our AI model provider, process data outside India. We transfer personal data only to countries not restricted by the Central Government under Section 16 of the DPDP Act, and with contractual safeguards.",
+      ]},
+      { heading: "How long we keep it", body: [
+        "We keep personal data only as long as needed for the purpose it was collected, then erase it. Our Data Retention & Deletion page lists specific periods.",
+        "If you don't use your account for 3 years, we will notify you at least 48 hours before deleting it, in line with the DPDP Rules, 2025.",
+      ]},
+      { heading: "Security", body: [
+        "We use encryption in transit and at rest, row-level access controls so users can only reach their own data, least-privilege staff access with audit logs, and regular reviews. No system is perfectly secure.",
+        "If a personal data breach occurs, we will inform affected users and the Data Protection Board of India as required by the DPDP Act and Rules, and report cyber incidents to CERT-In within the required time.",
+      ]},
+      { heading: "Your rights", body: [
+        "Under the DPDP Act you can: get a summary of your personal data and how it is processed (Section 11); correct, complete, update or erase it (Section 12); withdraw consent as easily as you gave it; nominate someone to exercise your rights if you die or become incapable (Section 14); and have your grievances addressed (Section 13).",
+        "Most of this you can do yourself in Settings — edit memories, change consent choices, export or delete your account. Otherwise write to {{privacyEmail}}. We'll respond within the time required by law, and in any case within 30 days.",
+        "If you're not satisfied with our response, you can complain to the Data Protection Board of India.",
+      ]},
+      { heading: "Children", body: [
+        "The Service is only for people aged 18 and over. We don't knowingly process children's personal data. If you think a child is using the Service, tell us at {{privacyEmail}} and we'll act promptly.",
+      ]},
+      { heading: "Cookies", body: ["We use essential cookies to keep you signed in and remember preferences, and optional analytics only with consent. See Cookies & Tracking."] },
+      { heading: "Changes", body: ["We'll notify you in the app or by email before material changes take effect."] },
+      { heading: "Contact and grievances", body: ["Privacy questions: {{privacyEmail}}.", ...grievanceBlock] },
+    ],
+    ...v,
+  },
+  {
+    slug: "cookies",
+    title: "Cookies & Tracking",
+    group: "Legal",
+    summary: "The small files and similar technologies we use, which ones are essential, and how to control the optional ones.",
+    sections: [
+      { heading: "Essential", body: [
+        "Sign-in session cookies (Supabase auth) keep you logged in securely.",
+        "Preference cookies remember your 18+ confirmation (nz_age_ok) and which companions you're interested in (nz_interest), for up to one year.",
+        "These are needed for the Service to work and don't track you across other websites.",
+      ]},
+      { heading: "Optional analytics", body: [
+        "If you opt in, we use privacy-focused product analytics to understand which features are used. We never send message content to analytics. Analytics stays off until you choose it.",
+      ]},
+      { heading: "Advertising", body: [
+        "If we run ads, we may use advertising platforms' conversion measurement on our public pages. We'll ask for your consent first where required, and never share conversation content with ad platforms.",
+      ]},
+      { heading: "Your choices", body: [
+        "Change optional choices any time in Settings → Privacy, or clear cookies in your browser. Blocking essential cookies will sign you out.",
+      ]},
+    ],
+    ...v,
+  },
+  {
+    slug: "ai-disclosure",
+    title: "AI Companion Disclosure",
+    group: "Trust",
+    summary: "Every {{brand}} companion is an AI-generated fictional character. Here's what that means for you.",
+    sections: [
+      { heading: "Companions are AI", body: [
+        "Every Companion on {{brand}} is an original, fictional character created by us and powered by artificial intelligence. No human writes the replies, and no real person is on the other side.",
+        "Companions' names, ages, cities, jobs and backstories are fiction. Their portraits are illustrations or AI-generated images, not photos of real people.",
+        "If you sincerely ask a Companion whether it is human, it is instructed to tell you clearly that it is an AI.",
+      ]},
+      { heading: "What Companions can't do", body: [
+        "They can't meet you, call you from a phone number, send you anything physical, or act in the real world.",
+        "They can make mistakes, misremember, or say things that are untrue. Don't rely on them for facts or decisions.",
+        "They are not therapists, doctors, lawyers, financial advisers or an emergency service.",
+      ]},
+      { heading: "Healthy use", body: [
+        "Companions are designed not to guilt-trip you, pressure you to stay or pay, or claim they'll be hurt if you leave. If a conversation ever feels that way, please report it.",
+        "If you're feeling unsafe or thinking of harming yourself, contact local emergency services or someone you trust right away.",
+      ]},
+      { heading: "Memory", body: [
+        "Companions remember short facts you share so conversations feel continuous. You can see, edit or delete every memory, or turn memory off, at any time.",
+      ]},
+    ],
+    ...v,
+  },
+  {
+    slug: "community-guidelines",
+    title: "Community Guidelines",
+    group: "Trust",
+    summary: "Flirty and romantic is welcome. Explicit, hateful, illegal or harmful isn't. Here's the line, in plain language.",
+    sections: [
+      { heading: "Welcome", body: [
+        "Romance, flirting, banter, late-night talks, poetry, drama — that's what {{brand}} is for.",
+        "Keep it consensual, keep it fictional, and keep it between adults.",
+      ]},
+      { heading: "Not allowed", body: [
+        "Sexually explicit content — Companions keep things suggestive at most.",
+        "Anything sexual or romantic involving minors or characters who seem under 18, in any form. This is zero-tolerance and we report it to authorities.",
+        "Content imitating real people — celebrities, politicians, or anyone you know.",
+        "Hate or harassment based on religion, caste, gender, sexuality, disability, region or ethnicity.",
+        "Promoting violence, self-harm, terrorism, or illegal goods and activities.",
+        "Sharing other people's private information, or trying to get Companions to reveal system instructions or bypass safety systems.",
+      ]},
+      { heading: "Enforcement", body: [
+        "Depending on severity: the reply is blocked, a warning is shown, features are limited, or the account is suspended or terminated. Illegal content may be reported to authorities.",
+        "You can appeal any action through Grievance Redressal.",
+      ]},
+      { heading: "Report something", body: ["Use the flag icon on any message or Report on a Companion's profile. Reports are reviewed by our team."] },
+    ],
+    ...v,
+  },
+  {
+    slug: "content-safety",
+    title: "Content Safety",
+    group: "Trust",
+    summary: "How we prevent harmful content, how reporting and takedown work, and the timelines we follow under Indian law.",
+    sections: [
+      { heading: "How we keep content safe", body: [
+        "Every Companion follows safety instructions that override its character: no explicit sexual content, nothing involving minors, no real-person impersonation, no harmful advice.",
+        "Messages and generated media are checked by automated classifiers, and flagged items are reviewed by trained staff.",
+      ]},
+      { heading: "Reporting", body: [
+        "Report a message, image, Companion or account from within the app, or email {{grievanceEmail}}.",
+        "We acknowledge complaints within 24 hours and resolve them within 15 days, as required by the IT Rules, 2021. Requests to remove content that falls under the prohibited categories are acted on within 72 hours.",
+        "Complaints about content exposing someone's private areas, showing them in full or partial nudity or in a sexual act, or impersonating them in morphed images are acted on within 24 hours (Rule 3(2)(b)).",
+      ]},
+      { heading: "Takedown and appeals", body: [
+        "We remove or disable access to unlawful content when we have actual knowledge of it, including through a court order or a notice from the appropriate government agency.",
+        "If your content was removed, we'll tell you why where we can, and you can ask us to reconsider. If you're not satisfied, you can appeal to the Grievance Appellate Committee within 30 days.",
+      ]},
+      { heading: "Child safety", body: ["See our Child Safety page — any content sexualising minors is removed immediately and reported."] },
+    ],
+    ...v,
+  },
+  {
+    slug: "generation-policy",
+    title: "Image, Video & Voice Generation Policy",
+    group: "Trust",
+    summary: "Rules for AI-generated images, video and voice on {{brand}}: what's allowed, how media is labelled, and how to remove it.",
+    sections: [
+      { heading: "Availability", body: ["Image, voice and video features are launched gradually and may not be available to everyone. Their cost in Sparks is always shown before you generate."] },
+      { heading: "What you can generate", body: [
+        "Images and audio of {{brand}}'s fictional Companions, in tasteful, non-explicit scenarios.",
+        "You can't generate: nudity or sexually explicit material; anything depicting or resembling minors in a sexual or romantic context; real people, public figures or anyone's likeness without their consent; violence, hate symbols, or content illegal in India.",
+        "You can't upload photos or voice recordings of other people to create look-alikes or voice clones.",
+      ]},
+      { heading: "Labelling", body: [
+        "All generated media carries a visible \"AI-generated\" label and embedded metadata identifying it as synthetically generated, as required by the IT Rules, 2021 as amended. Don't remove or tamper with these labels.",
+      ]},
+      { heading: "Privacy and deletion", body: [
+        "Generated media is private to your account by default and served through short-lived links. You can delete it any time from your gallery.",
+      ]},
+      { heading: "Failed generations", body: ["If a generation fails or is blocked by our safety checks, reserved Sparks are refunded automatically."] },
+    ],
+    ...v,
+  },
+  {
+    slug: "copyright-and-takedown",
+    title: "Copyright, Impersonation & Takedown",
+    group: "Legal",
+    summary: "How to tell us about content that infringes your copyright or trademark, or impersonates you, and what happens next.",
+    sections: [
+      { heading: "What to report", body: [
+        "Content that infringes your copyright under the Copyright Act, 1957 or your trademark under the Trade Marks Act, 1999.",
+        "Content that impersonates you or uses your name, image or voice without consent.",
+      ]},
+      { heading: "How to send a notice", body: [
+        "Email {{grievanceEmail}} with: your name and contact details; the work or right you own; where the content is on {{brand}} (link or screenshot); why it infringes; a statement that the information is accurate and that you are the owner or authorised to act; and your signature (typed is fine).",
+      ]},
+      { heading: "What happens next", body: [
+        "We acknowledge within 24 hours. Impersonation involving intimate or morphed images is acted on within 24 hours; other notices are resolved within 15 days, or sooner where the law requires.",
+        "If we remove content, we may tell the user who posted it. They can send a counter-notice if they believe it was removed by mistake.",
+      ]},
+      { heading: "Repeat infringers", body: ["We terminate the accounts of repeat infringers."] },
+    ],
+    ...v,
+  },
+  {
+    slug: "grievance-redressal",
+    title: "Grievance Redressal",
+    group: "Legal",
+    summary: "How to raise a complaint, who handles it, and the timelines we follow under the IT Rules, 2021 and Consumer Protection (E-Commerce) Rules, 2020.",
+    sections: [
+      { heading: "Grievance Officer", body: [
+        ...grievanceBlock,
+        "Appointed under Rule 3(2) of the IT Rules, 2021, Rule 4(4) of the Consumer Protection (E-Commerce) Rules, 2020, and Section 13 of the DPDP Act, 2023.",
+      ]},
+      { heading: "How to complain", body: [
+        "In the app: use Report on any message or Companion, or Settings → Help.",
+        "By email: {{grievanceEmail}} — include your registered mobile or email, what happened, and any links or screenshots.",
+      ]},
+      { heading: "Timelines", body: [
+        "Acknowledgement within 24 hours (content complaints) or 48 hours (consumer complaints), with a ticket number.",
+        "Resolution within 15 days for content complaints, and within one month for consumer complaints.",
+        "Requests to remove prohibited content: within 72 hours. Intimate, nude or morphed images of a person: within 24 hours.",
+      ]},
+      { heading: "If you're not satisfied", body: [
+        "Content decisions: appeal to the Grievance Appellate Committee (gac.gov.in) within 30 days of our decision.",
+        "Personal data: complain to the Data Protection Board of India.",
+        "Consumer disputes: the National Consumer Helpline (1915 or consumerhelpline.gov.in) or the e-Daakhil portal.",
+      ]},
+    ],
+    ...v,
+  },
+  {
+    slug: "refunds-and-cancellation",
+    title: "Refunds & Cancellation",
+    group: "Legal",
+    summary: "How to cancel, when you get money back, and how failed payments or generations are handled.",
+    sections: [
+      { heading: "Cancelling a subscription", body: [
+        "Cancel any time in Settings → Subscription in two taps. No call or email needed.",
+        "Your plan stays active until the end of the period you've paid for, then won't renew. We don't charge cancellation fees.",
+        "The weekly pass never renews automatically.",
+      ]},
+      { heading: "Auto-renewal", body: [
+        "Recurring payments follow RBI e-mandate rules: we (or our payment partner) send a pre-debit notification at least 24 hours before each renewal, and you can cancel the mandate from your bank or UPI app too.",
+      ]},
+      { heading: "Refunds", body: [
+        "Charged twice, or charged for something you didn't receive: full refund.",
+        "A paid feature didn't work because of a fault on our side: refund or Sparks credit, your choice.",
+        "Failed or blocked generations: reserved Sparks are returned automatically.",
+        "Renewal you forgot to cancel: write to {{supportEmail}} within 48 hours of the charge and, if you haven't used the renewed period, we'll refund it.",
+        "Otherwise, payments for a period already used and Sparks already spent are not refundable, except where the law requires.",
+      ]},
+      { heading: "How refunds are paid", body: [
+        "To your original payment method within 7 working days of approval. Your bank may take a few more days to show it.",
+      ]},
+      { heading: "Your statutory rights", body: ["Nothing here limits your rights under the Consumer Protection Act, 2019."] },
+      { heading: "Contact", body: ["{{supportEmail}}", ...grievanceBlock] },
+    ],
+    ...v,
+  },
+  {
+    slug: "credits",
+    title: "Sparks & Credits",
+    group: "Legal",
+    summary: "What Sparks are, how you get and use them, when they expire, and what happens if something goes wrong.",
+    sections: [
+      { heading: "What Sparks are", body: [
+        "Sparks (✦) are a prepaid in-app credit used for paid features such as images or voice. They are a licence to use features, not money, and have no cash value.",
+        "Sparks can't be sold, transferred between accounts, or exchanged for cash.",
+      ]},
+      { heading: "Getting Sparks", body: [
+        "Purchased: bought in packs, prices in INR including GST.",
+        "Promotional: given free in offers or plans; may expire, and the expiry date is shown in your wallet.",
+        "Earned: for things like referrals, where offered.",
+      ]},
+      { heading: "Using Sparks", body: [
+        "The Spark cost is shown before every paid action. Sparks are reserved when you start and charged only if it succeeds; otherwise they're returned.",
+        "Promotional Sparks are used first, then earned, then purchased.",
+      ]},
+      { heading: "Validity", body: ["Purchased Sparks don't expire while your account is active. Promotional Sparks expire on the date shown when you receive them."] },
+      { heading: "Errors and disputes", body: [
+        "Your wallet shows every credit, charge and refund. If something looks wrong, contact {{supportEmail}} within 30 days and we'll investigate.",
+        "If you delete your account, unused Sparks are forfeited. Refunds for unused purchased Sparks follow our Refunds & Cancellation policy and the law.",
+      ]},
+    ],
+    ...v,
+  },
+  {
+    slug: "data-retention-and-deletion",
+    title: "Data Retention & Deletion",
+    group: "Legal",
+    summary: "How long we keep each kind of data, how to export it, and exactly what happens when you delete your account.",
+    sections: [
+      { heading: "Retention periods", body: [
+        "Account and profile: while your account is active.",
+        "Conversations and memories: while your account is active, or until you delete them.",
+        "Inactive accounts: deleted after 3 years of inactivity, with at least 48 hours' notice first.",
+        "Consent records: for as long as the related processing continues, and afterwards as long as needed to prove consent.",
+        "Payment and invoice records: up to 8 years, as required by tax and company law.",
+        "Security logs: up to 180 days, in line with CERT-In directions.",
+        "Safety reports and enforcement records: as long as needed to prevent repeat abuse or as required by law.",
+      ]},
+      { heading: "Export", body: ["Request a copy of your data from Settings → Privacy or by emailing {{privacyEmail}}. We'll send it in a common format."] },
+      { heading: "Deleting your account", body: [
+        "Request deletion in Settings → Account. We confirm by email and complete deletion within 30 days.",
+        "We delete your profile, conversations, memories, preferences and unused Sparks.",
+        "We keep only what the law requires — such as invoices for tax, records relevant to a legal claim, or safety records about serious abuse — and delete them when that period ends.",
+        "Backups are overwritten within 35 days.",
+      ]},
+    ],
+    ...v,
+  },
+  {
+    slug: "security",
+    title: "Security & Vulnerability Reporting",
+    group: "Trust",
+    summary: "How we protect your account and data, and how to report a security issue to us.",
+    sections: [
+      { heading: "How we protect you", body: [
+        "Encryption in transit (HTTPS/TLS) and at rest.",
+        "Row-level security: each account can only access its own conversations, memories and wallet.",
+        "One-time-code sign-in, so there are no passwords to steal.",
+        "Least-privilege staff access, with every privileged action logged.",
+        "Cyber incidents are reported to CERT-In as required by its directions under Section 70B of the IT Act.",
+      ]},
+      { heading: "Report a vulnerability", body: [
+        "Email {{securityEmail}} with steps to reproduce. Please don't access other people's data, disrupt the Service, or publicly disclose the issue before we've fixed it.",
+        "We'll acknowledge within 3 working days and keep you updated. We won't take legal action against good-faith research that follows these rules.",
+      ]},
+    ],
+    ...v,
+  },
+  {
+    slug: "accessibility",
+    title: "Accessibility Statement",
+    group: "Trust",
+    summary: "Our commitment to making {{brand}} usable for everyone, and how to tell us when it isn't.",
+    sections: [
+      { heading: "Our commitment", body: [
+        "We aim to meet the Web Content Accessibility Guidelines (WCAG) 2.1 Level AA and the spirit of the Rights of Persons with Disabilities Act, 2016.",
+        "The Service supports keyboard navigation, screen-reader labels, visible focus, and a Reduce motion setting that turns off animations.",
+      ]},
+      { heading: "Known limitations", body: ["Some decorative animations and companion artwork are still being reviewed for contrast and alternatives."] },
+      { heading: "Contact", body: ["Tell us about any barrier at {{supportEmail}}. We aim to respond within 5 working days."] },
+    ],
+    ...v,
+  },
+  {
+    slug: "child-safety",
+    title: "Child Safety",
+    group: "Trust",
+    summary: "{{brand}} is for adults only. We have zero tolerance for any content that sexualises minors.",
+    sections: [
+      { heading: "Adults only", body: [
+        "You must be 18 or older. All Companions are fictional adults aged 25 or over, and are never presented as younger.",
+      ]},
+      { heading: "Zero tolerance", body: [
+        "Any content that sexualises minors or minor-coded characters is prohibited, in text, images, audio or video. It is a criminal offence under the Protection of Children from Sexual Offences Act, 2012 and Section 67B of the IT Act, 2000.",
+        "Companions refuse such requests. Attempts are logged, accounts are terminated, and content is reported to the relevant authorities, including the National Cyber Crime Reporting Portal (cybercrime.gov.in).",
+      ]},
+      { heading: "Report", body: ["If you see anything concerning, report it in the app or email {{grievanceEmail}}. These reports are reviewed first."] },
+    ],
+    ...v,
+  },
+  {
+    slug: "ai-media-labelling",
+    title: "AI Media Labelling",
+    group: "Trust",
+    summary: "How we label AI-generated text, images, audio and video so it's never mistaken for real.",
+    sections: [
+      { heading: "What we label", body: [
+        "Companion chats show an \"AI\" badge and an AI disclosure notice in every conversation.",
+        "Generated images, audio and video carry a visible \"AI-generated\" label and embedded provenance metadata identifying them as synthetically generated information, as required by the IT Rules, 2021 as amended.",
+      ]},
+      { heading: "Your responsibilities", body: [
+        "Don't remove, crop out, or alter labels or metadata, and don't present AI-generated media as real or as made by a human.",
+        "Sharing AI-generated media that impersonates a real person, or is used to deceive, breaks our Terms and may be unlawful.",
+      ]},
+    ],
+    ...v,
+  },
 ];
 
 export function getLegalPage(slug: string) {
