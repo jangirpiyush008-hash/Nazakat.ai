@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { replyOnce, type Turn } from "@/server/ai/anthropic";
 import { COMPANION_RULES, contextMessage } from "@/server/ai/prompt";
 import { billCallMinutes } from "@/server/calls";
-import { speak, transcribe, voiceFor } from "@/server/voice/elevenlabs";
+import { rateLimit, tooMany } from "@/server/rate-limit";
+import { speak, transcribe } from "@/server/voice";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -23,6 +24,8 @@ export async function POST(request: NextRequest) {
   if (!auth.user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const admin = createAdminClient();
   if (!admin) return NextResponse.json({ error: "unavailable" }, { status: 503 });
+  const rl = rateLimit("callTurn", auth.user.id);
+  if (!rl.ok) return tooMany(rl.retryAfter);
 
   const form = await request.formData().catch(() => null);
   const callId = form?.get("callId");
@@ -49,7 +52,8 @@ export async function POST(request: NextRequest) {
   if (!companion || !persona || !profile) return NextResponse.json({ error: "unavailable" }, { status: 503 });
 
   try {
-    const heard = await transcribe(audio);
+    const filename = audio.type.includes("ogg") ? "turn.ogg" : audio.type.includes("mp4") ? "turn.m4a" : "turn.webm";
+    const heard = await transcribe(audio, filename, auth.user.id);
     if (!heard.text) return NextResponse.json({ empty: true, minutes: bill.minutes });
 
     const turns: Turn[] = [...prior.data, { role: "user", content: heard.text }];
@@ -57,11 +61,11 @@ export async function POST(request: NextRequest) {
     const context =
       contextMessage({ language: profile.chat_language, memories: profile.memory_enabled ? (memories ?? []).map((m) => m.fact) : [], displayName: profile.display_name }) +
       "\nThis is a live voice call. Reply in 1–2 short, natural spoken sentences. No emojis, lists or stage directions.";
-    const reply = await replyOnce({ system: COMPANION_RULES, persona: persona.system_prompt, history: turns, context });
+    const reply = await replyOnce({ system: COMPANION_RULES, persona: persona.system_prompt, history: turns, context, userId: auth.user.id });
     if (!reply) return NextResponse.json({ error: "refused", heard: heard.text, minutes: bill.minutes }, { status: 422 });
 
-    const mp3 = await speak(reply, voiceFor(companion.gender, companion.voice_id));
-    return NextResponse.json({ heard: heard.text, reply, audio: Buffer.from(mp3).toString("base64"), minutes: bill.minutes });
+    const voice = await speak(reply, { gender: companion.gender, voiceId: companion.voice_id, chatLanguage: profile.chat_language, userId: auth.user.id, feature: "call_tts" });
+    return NextResponse.json({ heard: heard.text, reply, audio: voice.audio.toString("base64"), contentType: voice.contentType, minutes: bill.minutes });
   } catch (err) {
     console.error("call_turn_error", (err as Error).message);
     return NextResponse.json({ error: "failed", minutes: bill.minutes }, { status: 502 });

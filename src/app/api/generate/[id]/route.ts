@@ -2,7 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { result, status, type ImageResult, type VideoResult } from "@/server/media/fal";
+import { unitCosts } from "@/config/costs";
 import { refundSparks } from "@/server/sparks";
+import { trackUsage } from "@/server/usage";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -99,6 +101,11 @@ export async function GET(_req: NextRequest, { params }: { params: Params }) {
       await admin.from("conversations").update({ last_message_at: new Date().toISOString() }).eq("id", job.conversation_id);
     }
     await admin.from("generation_jobs").update({ status: "succeeded", media_id: media.id, finished_at: new Date().toISOString() }).eq("id", job.id);
+    trackUsage(
+      job.kind === "image"
+        ? { userId: job.user_id, feature: "image", provider: "fal", model: job.model, units: 1, unit: "image", costUsd: unitCosts.imagePerImage[job.model] ?? 0.03 }
+        : { userId: job.user_id, feature: "video", provider: "fal", model: job.model, units: job.duration_s ?? 0, unit: "seconds", costUsd: (job.duration_s ?? 0) * (unitCosts.videoPerSecond[job.model] ?? 0.1) },
+    );
     return NextResponse.json(await done(admin, job.id, media.id));
   } catch (err) {
     console.error("generate_finish_error", (err as Error).message);

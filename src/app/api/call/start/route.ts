@@ -5,6 +5,7 @@ import { sparkCosts } from "@/config/pricing";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { billCallMinutes } from "@/server/calls";
+import { rateLimit, tooMany } from "@/server/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -13,6 +14,8 @@ export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const rl = rateLimit("callStart", auth.user.id);
+  if (!rl.ok) return tooMany(rl.retryAfter);
   const parsed = z.object({ conversationId: z.string().uuid() }).safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "invalid" }, { status: 400 });
   const admin = createAdminClient();

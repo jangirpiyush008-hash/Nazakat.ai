@@ -89,6 +89,12 @@ export type Database = {
         Update: { id?: string; user_id?: string; companion_id?: string; conversation_id?: string | null; status?: string; minutes_charged?: number; sparks_per_minute?: number; started_at?: string; ended_at?: string | null; created_at?: string; updated_at?: string };
         Relationships: [];
       };
+      usage_events: {
+        Row: { id: string; user_id: string | null; feature: string; provider: string; model: string | null; units: number; unit: string; est_cost_usd: number; ok: boolean; created_at: string; updated_at: string };
+        Insert: { id?: string; user_id?: string | null; feature: string; provider: string; model?: string | null; units?: number; unit: string; est_cost_usd?: number; ok?: boolean; created_at?: string; updated_at?: string };
+        Update: { id?: string; user_id?: string | null; feature?: string; provider?: string; model?: string | null; units?: number; unit?: string; est_cost_usd?: number; ok?: boolean; created_at?: string; updated_at?: string };
+        Relationships: [];
+      };
       reports: {
         Row: { created_at: string; details: string | null; id: string; reason: string; reporter_id: string; resolution: string | null; reviewer_id: string | null; status: Database["public"]["Enums"]["report_status"]; target_id: string; target_type: Database["public"]["Enums"]["report_target"]; updated_at: string };
         Insert: { created_at?: string; details?: string | null; id?: string; reason: string; reporter_id: string; resolution?: string | null; reviewer_id?: string | null; status?: Database["public"]["Enums"]["report_status"]; target_id: string; target_type: Database["public"]["Enums"]["report_target"]; updated_at?: string };

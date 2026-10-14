@@ -66,7 +66,7 @@ export function CallScreen(props: { conversationId: string; name: string; wash: 
     go("thinking");
     const form = new FormData();
     form.append("callId", callId.current!);
-    form.append("audio", blob, "turn.webm");
+    form.append("audio", blob, blob.type.includes("ogg") ? "turn.ogg" : blob.type.includes("mp4") ? "turn.m4a" : "turn.webm");
     form.append("history", JSON.stringify(history.current.slice(-12)));
     const res = await fetch("/api/call/turn", { method: "POST", body: form }).catch(() => null);
     const j = res ? await res.json().catch(() => ({})) : { error: "network" };
@@ -81,7 +81,7 @@ export function CallScreen(props: { conversationId: string; name: string; wash: 
     history.current.push({ role: "user", content: j.heard }, { role: "assistant", content: j.reply });
     setCaption(j.reply);
     go("speaking");
-    const audio = new Audio(`data:audio/mpeg;base64,${j.audio}`);
+    const audio = new Audio(`data:${j.contentType || "audio/mpeg"};base64,${j.audio}`);
     audioEl.current = audio;
     audio.onended = () => phaseRef.current === "speaking" && go("listening");
     audio.play().catch(() => go("listening"));
@@ -99,11 +99,12 @@ export function CallScreen(props: { conversationId: string; name: string; wash: 
 
     const startRec = () => {
       chunks.current = [];
-      const rec = new MediaRecorder(s, { mimeType: MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "" });
+      const mime = ["audio/ogg;codecs=opus", "audio/webm;codecs=opus", "audio/webm", "audio/mp4"].find((t) => MediaRecorder.isTypeSupported(t)) ?? "";
+      const rec = new MediaRecorder(s, mime ? { mimeType: mime } : undefined);
       rec.ondataavailable = (e) => e.data.size && chunks.current.push(e.data);
       rec.onstop = () => {
         const dur = lastVoice - speakingSince;
-        const blob = new Blob(chunks.current, { type: rec.mimeType || "audio/webm" });
+        const blob = new Blob(chunks.current, { type: rec.mimeType || mime || "audio/webm" });
         if (dur >= MIN_SPEECH_MS && phaseRef.current === "listening") sendTurn(blob);
       };
       rec.start();

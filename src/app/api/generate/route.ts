@@ -4,8 +4,9 @@ import { getCapabilities } from "@/config/features";
 import { sparkCosts, videoDurations } from "@/config/pricing";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { falModels, imageInput, submit, videoInput } from "@/server/media/fal";
+import { availableDurations, falChains, submitWithFallback } from "@/server/media/fal";
 import { buildMediaPrompt, checkPrompt } from "@/server/media/safety";
+import { rateLimit, tooMany } from "@/server/rate-limit";
 import { chargeSparks, refundSparks } from "@/server/sparks";
 
 export const runtime = "nodejs";
@@ -30,6 +31,9 @@ export async function POST(request: NextRequest) {
   const user = auth.user;
   if (!user) return fail(401, "unauthorized");
 
+  const rl = rateLimit("generate", user.id);
+  if (!rl.ok) return tooMany(rl.retryAfter);
+
   const parsed = body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return fail(400, "invalid");
   const { conversationId, kind, prompt } = parsed.data;
@@ -47,11 +51,13 @@ export async function POST(request: NextRequest) {
   ]);
   if (!profile?.onboarded_at || !companion) return fail(403, "unauthorized");
 
-  const verdict = await checkPrompt(prompt);
+  if (duration && !availableDurations().includes(duration)) return fail(400, "duration_unavailable");
+  const verdict = await checkPrompt(prompt, user.id);
   if (!verdict.ok) return NextResponse.json({ error: "blocked", reason: verdict.reason }, { status: 422 });
 
   const cost = kind === "image" ? sparkCosts.image : sparkCosts.video[duration as 5 | 8 | 10 | 15];
-  const model = kind === "image" ? falModels.image : companion.portrait_path ? falModels.imageToVideo : falModels.textToVideo;
+  const chain = kind === "image" ? falChains.image() : companion.portrait_path ? [...falChains.imageToVideo(), ...falChains.textToVideo()] : falChains.textToVideo();
+  const model = chain[0] ?? "unconfigured";
 
   const { data: job, error: jobError } = await admin
     .from("generation_jobs")
@@ -73,10 +79,10 @@ export async function POST(request: NextRequest) {
       const { data: signed } = await admin.storage.from("portraits").createSignedUrl(companion.portrait_path, 600);
       startImage = signed?.signedUrl;
     }
-    const sub = await submit(model, kind === "image" ? imageInput(full) : videoInput(full, duration!, startImage));
+    const sub = await submitWithFallback(kind, full, { duration: duration ?? undefined, startImageUrl: startImage });
     await admin
       .from("generation_jobs")
-      .update({ status: "running", provider_request_id: sub.requestId, status_url: sub.statusUrl, response_url: sub.responseUrl })
+      .update({ status: "running", model: sub.model, provider_request_id: sub.requestId, status_url: sub.statusUrl, response_url: sub.responseUrl })
       .eq("id", job.id);
   } catch (err) {
     console.error("generate_submit_error", (err as Error).message);

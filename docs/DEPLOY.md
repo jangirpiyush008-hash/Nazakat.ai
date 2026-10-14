@@ -20,9 +20,9 @@ Railway builds from `main` on GitHub automatically (`pnpm build`, then `pnpm sta
 | `AUTH_PHONE_ENABLED` / `AUTH_GOOGLE_ENABLED` / `AUTH_DISCORD_ENABLED` | `true` once the provider is set up in Supabase | extra sign-in methods |
 | `FAL_KEY` | fal.ai → Dashboard → Keys | photos and videos |
 | `FEATURE_IMAGE_GEN` / `FEATURE_VIDEO_GEN` | `true` | turn photos / videos on |
-| `ELEVENLABS_API_KEY` | elevenlabs.io → API keys | voice calls |
-| `FEATURE_VOICE_CALLS` | `true` | turn voice calls on |
-| `ELEVENLABS_VOICE_FEMALE` / `ELEVENLABS_VOICE_MALE` | voice IDs from the Voice Library (optional) | Indian-accent voices |
+| `SARVAM_API_KEY` | dashboard.sarvam.ai | voice calls + voice notes (Indian voices, cheaper) |
+| `ELEVENLABS_API_KEY` | elevenlabs.io → API keys | premium voices / automatic fallback |
+| `FEATURE_VOICE_CALLS` / `FEATURE_VOICE_NOTES` | `true` | turn calls / voice notes on |
 | `NEXT_PUBLIC_SPARKS_*` | see `.env.example` (optional) | Sparks prices |
 
 ## Supabase → Authentication → URL Configuration
@@ -35,6 +35,13 @@ When you move to a custom domain, add its `/auth/callback` here and update `NEXT
 ## Location ("Trending in <city>")
 
 Railway doesn't add visitor-location headers, so the home page shows "Trending near you". Putting Cloudflare in front (or moving to Vercel) enables city names.
+
+## Testing keys
+
+```bash
+node --env-file=.env.local scripts/check-keys.ts           # free checks
+node --env-file=.env.local scripts/check-keys.ts --spend   # + one tiny paid call per provider
+```
 
 ## Checks after each deploy
 

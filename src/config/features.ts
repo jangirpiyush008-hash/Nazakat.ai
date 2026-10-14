@@ -26,7 +26,10 @@ export function getCapabilities() {
     chat: has("AI_CHAT_API_KEY", "SUPABASE_SERVICE_ROLE_KEY"),
     image: (has("FAL_KEY", "SUPABASE_SERVICE_ROLE_KEY") && enabled(process.env.FEATURE_IMAGE_GEN) ? "available" : "coming_soon") as Availability,
     video: (has("FAL_KEY", "SUPABASE_SERVICE_ROLE_KEY") && enabled(process.env.FEATURE_VIDEO_GEN) ? "available" : "coming_soon") as Availability,
-    voice: (has("ELEVENLABS_API_KEY", "AI_CHAT_API_KEY", "SUPABASE_SERVICE_ROLE_KEY") && enabled(process.env.FEATURE_VOICE_CALLS)
+    voice: ((has("SARVAM_API_KEY") || has("ELEVENLABS_API_KEY")) && has("AI_CHAT_API_KEY", "SUPABASE_SERVICE_ROLE_KEY") && enabled(process.env.FEATURE_VOICE_CALLS)
+      ? "available"
+      : "coming_soon") as Availability,
+    voiceNotes: ((has("SARVAM_API_KEY") || has("ELEVENLABS_API_KEY")) && has("SUPABASE_SERVICE_ROLE_KEY") && enabled(process.env.FEATURE_VOICE_NOTES)
       ? "available"
       : "coming_soon") as Availability,
     payments: has("PAYMENT_PROVIDER", "PAYMENT_SECRET_KEY", "PAYMENT_WEBHOOK_SECRET") && enabled(process.env.FEATURE_PAYMENTS),

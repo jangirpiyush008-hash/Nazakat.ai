@@ -1,5 +1,7 @@
 import "server-only";
+import { llmCost } from "@/config/costs";
 import { Anthropic, chatModel } from "@/server/ai/anthropic";
+import { trackUsage } from "@/server/usage";
 
 /**
  * Pre-generation prompt check. Hard rules (never relaxed): no sexual content
@@ -11,7 +13,7 @@ const explicitTerms = /\b(nude|nudes|naked|nsfw|porn|porno|pornographic|xxx|sex|
 
 export type SafetyVerdict = { ok: true } | { ok: false; reason: "minor" | "explicit" | "real_person" | "other" };
 
-export async function checkPrompt(prompt: string): Promise<SafetyVerdict> {
+export async function checkPrompt(prompt: string, userId: string | null = null): Promise<SafetyVerdict> {
   if (minorTerms.test(prompt)) return { ok: false, reason: "minor" };
   if (explicitTerms.test(prompt)) return { ok: false, reason: "explicit" };
 
@@ -38,6 +40,7 @@ export async function checkPrompt(prompt: string): Promise<SafetyVerdict> {
         "You screen prompts for an adults-only AI companion app that generates images/videos of fictional adult characters. ALLOW: romance, flirting, glamour, fashion, swimwear, lingerie, sensual-but-clothed poses, kissing, dates, any normal scene. BLOCK as 'minor': anything suggesting a person under 18 or child-like features in a romantic/sexual context. BLOCK as 'explicit': nudity, exposed genitals/nipples, or sexual acts. BLOCK as 'real_person': named real people, celebrities, politicians. BLOCK as 'other': gore, extreme violence, hate symbols, illegal acts. Otherwise allowed=true, reason='ok'.",
       messages: [{ role: "user", content: prompt }],
     });
+    trackUsage({ userId, feature: "safety", provider: "anthropic", model: res.model, units: res.usage.input_tokens + res.usage.output_tokens, unit: "tokens", costUsd: llmCost(res.model, res.usage.input_tokens, res.usage.output_tokens) });
     if (res.stop_reason === "refusal") return { ok: false, reason: "other" };
     const text = res.content.find((b) => b.type === "text");
     if (!text || text.type !== "text") return { ok: true };

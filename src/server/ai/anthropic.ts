@@ -1,6 +1,8 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
+import { llmCost } from "@/config/costs";
+import { trackUsage } from "@/server/usage";
 
 let client: Anthropic | null = null;
 function getClient() {
@@ -45,7 +47,7 @@ export function streamReply(opts: { system: string; persona: string; history: Tu
 }
 
 /** Short non-streaming reply for voice calls (spoken aloud, so 1–2 sentences). */
-export async function replyOnce(opts: { system: string; persona: string; history: Turn[]; context: string }) {
+export async function replyOnce(opts: { system: string; persona: string; history: Turn[]; context: string; userId: string }) {
   const anthropic = getClient();
   if (!anthropic) return null;
   const res = await anthropic.beta.messages.create({
@@ -60,6 +62,7 @@ export async function replyOnce(opts: { system: string; persona: string; history
     ],
     messages: [...opts.history.map((t) => ({ role: t.role, content: t.content })), { role: "system" as const, content: opts.context }],
   });
+  trackUsage({ userId: opts.userId, feature: "call_llm", provider: "anthropic", model: res.model, units: res.usage.input_tokens + res.usage.output_tokens, unit: "tokens", costUsd: llmCost(res.model, res.usage.input_tokens, res.usage.output_tokens) });
   if (res.stop_reason === "refusal") return null;
   return res.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join(" ").trim();
 }
@@ -75,7 +78,7 @@ const memorySchema = z.object({
  * Skips health, sexuality, religion, caste, politics, finances and anything
  * about third parties — DPDP data minimisation.
  */
-export async function extractMemories(userText: string, known: string[]) {
+export async function extractMemories(userText: string, known: string[], userId: string | null = null) {
   const anthropic = getClient();
   if (!anthropic || userText.trim().length < 12) return [];
   const res = await anthropic.messages.create({
@@ -110,6 +113,7 @@ export async function extractMemories(userText: string, known: string[]) {
       "Extract at most 3 short, durable facts the user shared about THEMSELVES that a friend would remember (nickname, city, job, favourite things, upcoming plans with dates). Write each in under 12 words, third person (\"Likes cutting chai\"). Skip anything already known, anything temporary, and anything sensitive: health, sexuality, religion, caste, politics, finances, passwords, contact details, or facts about other people. Return an empty list when nothing qualifies.",
     messages: [{ role: "user", content: `Already known:\n${known.join("\n") || "(nothing)"}\n\nUser message:\n${userText}` }],
   });
+  trackUsage({ userId, feature: "memory", provider: "anthropic", model: res.model, units: res.usage.input_tokens + res.usage.output_tokens, unit: "tokens", costUsd: llmCost(res.model, res.usage.input_tokens, res.usage.output_tokens) });
   if (res.stop_reason === "refusal") return [];
   const text = res.content.find((b) => b.type === "text");
   if (!text || text.type !== "text") return [];

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import clsx from "clsx";
 import { X } from "lucide-react";
-import { sparkCosts, videoDurations, type VideoDuration } from "@/config/pricing";
+import { sparkCosts, type VideoDuration } from "@/config/pricing";
 
 const ideas = {
   image: ["Selfie on a rainy Mumbai balcony", "Candle-lit café, looking at the camera", "Rooftop fairy lights at night", "Getting ready for a wedding, in a saree"],
@@ -15,17 +15,19 @@ export function MediaSheet({
   kind,
   name,
   balance,
+  durations,
   onClose,
   onCreate,
 }: {
   kind: "image" | "video";
   name: string;
   balance: number;
+  durations: VideoDuration[];
   onClose: () => void;
   onCreate: (prompt: string, duration?: VideoDuration) => void;
 }) {
   const [prompt, setPrompt] = useState("");
-  const [duration, setDuration] = useState<VideoDuration>(5);
+  const [duration, setDuration] = useState<VideoDuration>(durations[0] ?? 5);
   const cost = kind === "image" ? sparkCosts.image : sparkCosts.video[duration];
   const short = balance < cost;
 
@@ -61,7 +63,7 @@ export function MediaSheet({
           <div className="flex flex-col gap-2">
             <span className="label-caps text-ink-3">Length</span>
             <div className="grid grid-cols-4 gap-2">
-              {videoDurations.map((d) => (
+              {durations.map((d) => (
                 <button
                   key={d}
                   type="button"

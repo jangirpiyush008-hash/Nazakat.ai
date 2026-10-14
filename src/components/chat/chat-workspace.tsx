@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
-import { ArrowLeft, Brain, Camera, Clapperboard, Copy, Flag, Phone, RotateCcw, Send, Square, ThumbsDown, ThumbsUp, X } from "lucide-react";
+import { ArrowLeft, Brain, Camera, Clapperboard, Copy, Flag, Phone, RotateCcw, Send, Square, ThumbsDown, ThumbsUp, Volume2, X } from "lucide-react";
 import { sparkCosts, type VideoDuration } from "@/config/pricing";
 import { createClient } from "@/lib/supabase/browser";
 import type { ChatEvent, ErrorCode } from "@/app/api/chat/route";
@@ -41,8 +41,9 @@ export function ChatWorkspace(props: {
   initialMemories: Memory[];
   memoryEnabled: boolean;
   chatAvailable: boolean;
-  features: { image: boolean; video: boolean; voice: boolean };
+  features: { image: boolean; video: boolean; voice: boolean; voiceNotes: boolean };
   balance: number;
+  videoDurations: VideoDuration[];
   remaining: number;
   dailyLimit: number;
 }) {
@@ -57,6 +58,26 @@ export function ChatWorkspace(props: {
   const [panel, setPanel] = useState(false);
   const [sheet, setSheet] = useState<"image" | "video" | null>(null);
   const [balance, setBalance] = useState(props.balance);
+  const [voiceLoading, setVoiceLoading] = useState<string | null>(null);
+  const voiceCache = useRef(new Map<string, string>());
+
+  const playVoice = async (id: string) => {
+    let url = voiceCache.current.get(id);
+    if (!url) {
+      setVoiceLoading(id);
+      const r = await fetch("/api/voice-note", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messageId: id }) });
+      const j = await r.json().catch(() => ({}));
+      setVoiceLoading(null);
+      if (!r.ok || !j.url) {
+        setToast(j.error === "insufficient_sparks" ? "Not enough Sparks for a voice note." : "Couldn't make that voice note. Sparks refunded.");
+        return;
+      }
+      if (j.cost) setBalance((b) => Math.max(0, b - j.cost));
+      url = j.url as string;
+      voiceCache.current.set(id, url);
+    }
+    new Audio(url).play().catch(() => {});
+  };
   const abort = useRef<AbortController | null>(null);
   const bottom = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -307,6 +328,18 @@ export function ChatWorkspace(props: {
               )}
               {m.role === "assistant" && !m.pending && !m.job && !/^(reply|media|job)-/.test(m.id) && (
                 <div className="flex gap-3 pl-1.5 text-ink-3 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 max-md:opacity-100">
+                  {props.features.voiceNotes && (
+                    <button
+                      type="button"
+                      aria-label={`Hear this as a voice note (${sparkCosts.voiceNote} Sparks, replays free)`}
+                      onClick={() => playVoice(m.id)}
+                      disabled={voiceLoading === m.id}
+                      className="inline-flex items-center gap-1 text-marigold hover:text-ink disabled:opacity-50"
+                    >
+                      <Volume2 className="size-3.5" />
+                      {voiceLoading === m.id ? "…" : voiceCache.current.has(m.id) ? "" : `✦${sparkCosts.voiceNote}`}
+                    </button>
+                  )}
                   <button type="button" aria-label="Copy" onClick={() => navigator.clipboard.writeText(m.content)} className="hover:text-ink"><Copy className="size-3.5" /></button>
                   <button type="button" aria-label="Good reply" aria-pressed={m.feedback === 1} onClick={() => feedback(m.id, 1)} className={clsx("hover:text-ink", m.feedback === 1 && "text-marigold")}><ThumbsUp className="size-3.5" /></button>
                   <button type="button" aria-label="Bad reply" aria-pressed={m.feedback === -1} onClick={() => feedback(m.id, -1)} className={clsx("hover:text-ink", m.feedback === -1 && "text-rani")}><ThumbsDown className="size-3.5" /></button>
@@ -397,7 +430,7 @@ export function ChatWorkspace(props: {
       </section>
 
       {sheet && (
-        <MediaSheet kind={sheet} name={c.name} balance={balance} onClose={() => setSheet(null)} onCreate={(p, d) => createMedia(sheet, p, d)} />
+        <MediaSheet kind={sheet} name={c.name} balance={balance} durations={props.videoDurations} onClose={() => setSheet(null)} onCreate={(p, d) => createMedia(sheet, p, d)} />
       )}
 
       {/* Memory panel: side column on desktop, sheet on mobile */}

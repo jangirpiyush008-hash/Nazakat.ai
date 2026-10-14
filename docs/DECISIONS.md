@@ -165,3 +165,17 @@ are recorded and audit-logged), real portraits, and automated E2E tests.
   storage with 1-hour signed URLs, and an "AI-generated" label on every item. The owner asked for "unfiltered" models; that was
   declined because of IT Act 67/67A/67B, POCSO and payment-provider rules.
 - `scripts/rls-check.ts` passed 26/26 on the live project on 2026-10-15.
+
+## V1.2 — provider fallback, voice notes, limits, cost tracking (2026-10-15)
+
+- **Voice chain:** Sarvam (Bulbul v3 TTS, Saaras v4 STT; Indian languages, cheaper) then ElevenLabs, set with `VOICE_PROVIDERS`.
+  Either key alone works.
+- **Video chain:** Kling 3 Pro (5/8/10/15 s) then Seedance 1 Pro (5/8/10 s). Each model declares the lengths it supports;
+  the length picker only offers lengths a configured model can make.
+- **Photo chain:** FLUX dev then FLUX Schnell (cheaper).
+- **Voice notes:** ✦3 per reply, audio cached in private storage so replays are free.
+- **Rate limits:** in-memory per user (chat 30/min, generate 6/min, voice notes 20/min, call turns 40/min, call starts 5/min).
+  Move to Redis before running more than one Railway instance.
+- **Cost tracking:** a `usage_events` table records estimated USD per AI call (finance role only). Unit costs live in
+  `src/config/costs.ts` and are estimates to reconcile against invoices.
+- **Payments:** deferred by the owner until after feature testing.

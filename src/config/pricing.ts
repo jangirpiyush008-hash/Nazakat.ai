@@ -70,6 +70,7 @@ export const sparkCosts = {
     15: envInt(process.env.NEXT_PUBLIC_SPARKS_VIDEO_15, 180),
   } satisfies Record<VideoDuration, number>,
   voicePerMinute: envInt(process.env.NEXT_PUBLIC_SPARKS_CALL_MINUTE, 12),
+  voiceNote: envInt(process.env.NEXT_PUBLIC_SPARKS_VOICE_NOTE, 3),
 };
 
 /** One-time promo Sparks on finishing onboarding (set in SQL: complete_onboarding). */

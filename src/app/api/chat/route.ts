@@ -4,7 +4,10 @@ import { FREE_DAILY_MESSAGES, getCapabilities } from "@/config/features";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { Anthropic, chatModel, extractMemories, streamReply, type Turn } from "@/server/ai/anthropic";
+import { llmCost } from "@/config/costs";
 import { COMPANION_RULES, contextMessage } from "@/server/ai/prompt";
+import { rateLimit, tooMany } from "@/server/rate-limit";
+import { trackUsage } from "@/server/usage";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -35,6 +38,8 @@ export async function POST(request: NextRequest) {
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
   if (!user) return fail(401, "unauthorized");
+  const rl = rateLimit("chat", user.id);
+  if (!rl.ok) return tooMany(rl.retryAfter);
 
   const parsed = body.safeParse(await request.json().catch(() => null));
   if (!parsed.success || (!parsed.data.text && !parsed.data.retry)) return fail(400, "invalid");
@@ -131,6 +136,7 @@ export async function POST(request: NextRequest) {
           .select("id")
           .single();
         await admin.from("conversations").update({ last_message_at: new Date().toISOString() }).eq("id", convo.id);
+        trackUsage({ userId: user.id, feature: "chat", provider: "anthropic", model: final.model, units: final.usage.input_tokens + final.usage.output_tokens, unit: "tokens", costUsd: llmCost(final.model, final.usage.input_tokens, final.usage.output_tokens) });
         send({ t: "done", id: saved?.id ?? "", remaining });
       } catch (err) {
         if (request.signal.aborted) {
@@ -150,7 +156,7 @@ export async function POST(request: NextRequest) {
       // Memory extraction runs after the reply is visible.
       if (profile.memory_enabled && text) {
         try {
-          const found = await extractMemories(lastUserText, known);
+          const found = await extractMemories(lastUserText, known, user.id);
           if (found.length) {
             const { data: inserted } = await supabase
               .from("memory_items")

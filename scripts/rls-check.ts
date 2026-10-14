@@ -75,6 +75,8 @@ try {
   await rest("rpc/refund_sparks", admin, { method: "POST", body: JSON.stringify({ uid: A.id, amount: 60, key: `r-${job.id}`, ref: "refund" }) });
   const refunded = await rest("rpc/spark_balance", A.h, { method: "POST", body: "{}" }).then((r) => r.json());
   check("refund is applied once (back to 70)", refunded === 70, String(refunded));
+  await rest("usage_events", admin, { method: "POST", body: JSON.stringify({ user_id: A.id, feature: "chat", provider: "anthropic", units: 10, unit: "tokens", est_cost_usd: 0.001 }) });
+  check("users can't read cost tracking", (await count("usage_events?select=id")) === 0 && (await count("usage_events?select=id", A.h)) === 0);
 } finally {
   for (const u of [A, B]) await fetch(`${url}/auth/v1/admin/users/${u.id}`, { method: "DELETE", headers: admin });
 }

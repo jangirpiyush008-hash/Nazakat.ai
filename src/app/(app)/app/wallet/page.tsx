@@ -21,6 +21,7 @@ function describe(ref: string | null) {
   if (ref.startsWith("image:")) return "Photo";
   if (ref.startsWith("video:")) return "Video";
   if (ref.startsWith("call:")) return "Voice call minute";
+  if (ref.startsWith("voice_note:")) return "Voice note";
   return ref;
 }
 
@@ -53,6 +54,7 @@ export default async function WalletPage() {
             <div key={d} className="flex justify-between rounded-[14px] bg-surface px-4 py-3"><span>Video · {d} seconds</span><b className="text-marigold">✦ {sparkCosts.video[d]}</b></div>
           ))}
           <div className="flex justify-between rounded-[14px] bg-surface px-4 py-3"><span>Voice call</span><b className="text-marigold">✦ {sparkCosts.voicePerMinute} / min</b></div>
+          <div className="flex justify-between rounded-[14px] bg-surface px-4 py-3"><span>Voice note (replays free)</span><b className="text-marigold">✦ {sparkCosts.voiceNote}</b></div>
           <div className="flex justify-between rounded-[14px] bg-surface px-4 py-3 text-ink-2"><span>Text chat</span><span>Free daily allowance</span></div>
         </div>
         <p className="text-xs text-ink-3">Failed or blocked generations are refunded automatically.</p>
