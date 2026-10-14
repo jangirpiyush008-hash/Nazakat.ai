@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Compass, MessageCircle, Settings } from "lucide-react";
+import { Compass, Images, MessageCircle, Settings } from "lucide-react";
 import { brand } from "@/config/brand";
 import { getUser } from "@/lib/supabase/server";
 import { DiscreetGuard } from "@/components/discreet-guard";
@@ -26,11 +26,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </Link>
           <nav aria-label="App" className="hidden items-center gap-6 text-sm text-ink-2 md:flex">
             <Link href="/app/chat" className="hover:text-ink">Chats</Link>
+            <Link href="/app/gallery" className="hover:text-ink">Gallery</Link>
             <Link href="/explore" className="hover:text-ink">Discover</Link>
             <Link href="/app/settings" className="hover:text-ink">Settings</Link>
           </nav>
           {balance !== null && (
-            <Link href="/pricing" className="inline-flex h-8 items-center rounded-full bg-marigold/12 px-3 text-[13px] font-bold text-marigold">
+            <Link href="/app/wallet" className="inline-flex h-8 items-center rounded-full bg-marigold/12 px-3 text-[13px] font-bold text-marigold">
               ✦ {balance}
             </Link>
           )}
@@ -40,6 +41,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <nav aria-label="App" className="fixed inset-x-0 bottom-0 z-40 flex border-t border-white/[.07] bg-bg/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-[20px] md:hidden">
         {[
           ["/app/chat", "Chats", <MessageCircle key="c" className="size-5" aria-hidden />],
+          ["/app/gallery", "Gallery", <Images key="g" className="size-5" aria-hidden />],
           ["/explore", "Discover", <Compass key="d" className="size-5" aria-hidden />],
           ["/app/settings", "Settings", <Settings key="s" className="size-5" aria-hidden />],
         ].map(([href, label, icon]) => (

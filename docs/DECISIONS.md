@@ -147,3 +147,21 @@ lets users add, edit and forget facts, and memory can be switched off in Setting
 
 **Not done yet:** Sparks purchases, image/voice, the admin console, the account-deletion worker (requests
 are recorded and audit-logged), real portraits, and automated E2E tests.
+
+## V1.1 — photos, videos, voice calls (2026-10-15)
+
+- **Photos:** fal.ai `fal-ai/flux/dev` (marked for commercial use), portrait 4:3, provider safety checker on, plus a `has_nsfw_concepts` check.
+- **Videos:** fal.ai Kling 3 Pro, which accepts any duration from 3 to 15 s, so one model covers 5, 8, 10 and 15 s with native audio.
+  It uses text-to-video now, and switches to image-to-video automatically once a companion has a portrait.
+- **Voice calls:** turn-based. Browser voice-activity detection → ElevenLabs Scribe speech-to-text → Claude (1–2 spoken sentences)
+  → ElevenLabs multilingual text-to-speech. Billed per started minute, capped at 30 minutes. Audio and call transcripts are not stored.
+- **Sparks:** `charge_sparks()` takes a per-user advisory lock, is idempotent and refuses overspending. `refund_sparks()` is idempotent.
+  Failed or blocked generations are refunded automatically. Every new user gets 50 promo Sparks valid for 30 days.
+  Default prices (1 ✦ ≈ ₹1) are photo 10; video 60 / 95 / 120 / 180 for 5 / 8 / 10 / 15 s; calls 12 per minute.
+  The design's 4 ✦/min for calls would sell below provider cost. Calibrate against real fal.ai and ElevenLabs invoices and
+  override with `NEXT_PUBLIC_SPARKS_*`.
+- **Safety (kept on by design):** keyword blocks for minors and explicit terms, a Claude prompt classifier (allows glamour,
+  swimwear, lingerie and romance; blocks minors, nudity or sex acts, and real people), the provider safety checkers, private
+  storage with 1-hour signed URLs, and an "AI-generated" label on every item. The owner asked for "unfiltered" models; that was
+  declined because of IT Act 67/67A/67B, POCSO and payment-provider rules.
+- `scripts/rls-check.ts` passed 26/26 on the live project on 2026-10-15.

@@ -24,15 +24,11 @@ export function getCapabilities() {
       discord: auth && enabled(process.env.AUTH_DISCORD_ENABLED),
     } satisfies AuthMethods,
     chat: has("AI_CHAT_API_KEY", "SUPABASE_SERVICE_ROLE_KEY"),
-    image:
-      has("IMAGE_PROVIDER", "IMAGE_PROVIDER_API_KEY") && enabled(process.env.FEATURE_IMAGE_GEN)
-        ? ("available" as Availability)
-        : ("coming_soon" as Availability),
-    voice:
-      has("VOICE_PROVIDER", "VOICE_PROVIDER_API_KEY") && enabled(process.env.FEATURE_VOICE)
-        ? ("available" as Availability)
-        : ("coming_soon" as Availability),
-    video: "coming_soon" as Availability,
+    image: (has("FAL_KEY", "SUPABASE_SERVICE_ROLE_KEY") && enabled(process.env.FEATURE_IMAGE_GEN) ? "available" : "coming_soon") as Availability,
+    video: (has("FAL_KEY", "SUPABASE_SERVICE_ROLE_KEY") && enabled(process.env.FEATURE_VIDEO_GEN) ? "available" : "coming_soon") as Availability,
+    voice: (has("ELEVENLABS_API_KEY", "AI_CHAT_API_KEY", "SUPABASE_SERVICE_ROLE_KEY") && enabled(process.env.FEATURE_VOICE_CALLS)
+      ? "available"
+      : "coming_soon") as Availability,
     payments: has("PAYMENT_PROVIDER", "PAYMENT_SECRET_KEY", "PAYMENT_WEBHOOK_SECRET") && enabled(process.env.FEATURE_PAYMENTS),
   };
 }

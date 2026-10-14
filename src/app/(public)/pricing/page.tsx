@@ -26,7 +26,7 @@ const faqs = [
   ["Can I chat for free?", "Yes. Every account gets a free daily message allowance with every public companion. No card needed."],
   ["Can I pay with UPI?", "UPI will be the first payment option, alongside cards, once our payment partner approves us. Until then checkout stays switched off."],
   ["How do I cancel?", "Settings → Subscription → Cancel. Plus stays active until the end of the period you paid for. The weekly pass never renews."],
-  [`What are ${brand.creditName}?`, `${brand.creditName} (✦) pay for extras: an image costs ✦ ${sparkCosts.image}, voice costs ✦ ${sparkCosts.voicePerMinute}/min. You always see the cost first, and failed generations are refunded.`],
+  [`What are ${brand.creditName}?`, `${brand.creditName} (✦) pay for extras: a photo costs ✦ ${sparkCosts.image}, a 5-second video ✦ ${sparkCosts.video[5]}, and voice calls ✦ ${sparkCosts.voicePerMinute}/min. You always see the cost first, and failed generations are refunded.`],
 ];
 
 type SP = Promise<{ period?: string }>;
@@ -142,7 +142,7 @@ export default async function PricingPage({ searchParams }: { searchParams: SP }
             ))}
           </div>
           <p className="text-xs text-ink-3">
-            Image ✦ {sparkCosts.image} · Voice ✦ {sparkCosts.voicePerMinute}/min · Video coming soon. Failed generations are refunded automatically.
+            Photo ✦ {sparkCosts.image} · Video ✦ {sparkCosts.video[5]} (5s) / {sparkCosts.video[8]} (8s) / {sparkCosts.video[10]} (10s) / {sparkCosts.video[15]} (15s) · Voice call ✦ {sparkCosts.voicePerMinute}/min. Failed generations are refunded automatically.
           </p>
         </section>
 

@@ -3,12 +3,24 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
-import { ArrowLeft, Brain, Copy, Flag, RotateCcw, Send, Square, ThumbsDown, ThumbsUp, X } from "lucide-react";
+import { ArrowLeft, Brain, Camera, Clapperboard, Copy, Flag, Phone, RotateCcw, Send, Square, ThumbsDown, ThumbsUp, X } from "lucide-react";
+import { sparkCosts, type VideoDuration } from "@/config/pricing";
 import { createClient } from "@/lib/supabase/browser";
 import type { ChatEvent, ErrorCode } from "@/app/api/chat/route";
 import { MemoryPanel, type Memory } from "./memory-panel";
+import { MediaSheet } from "./media-sheet";
 
-type Msg = { id: string; role: "user" | "assistant"; content: string; feedback?: number | null; pending?: boolean };
+export type MediaRef = { id: string; kind: "image" | "video"; url: string | null; duration: number | null };
+type Msg = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  feedback?: number | null;
+  pending?: boolean;
+  media?: MediaRef | null;
+  /** In-progress photo/video generation shown as a placeholder bubble. */
+  job?: { id: string; kind: "image" | "video"; duration?: number; error?: string };
+};
 type Companion = { id: string; slug: string; name: string; age: number; city: string; occupation: string; hook: string; wash: string };
 
 const errorCopy: Record<ErrorCode | "network", string> = {
@@ -29,6 +41,8 @@ export function ChatWorkspace(props: {
   initialMemories: Memory[];
   memoryEnabled: boolean;
   chatAvailable: boolean;
+  features: { image: boolean; video: boolean; voice: boolean };
+  balance: number;
   remaining: number;
   dailyLimit: number;
 }) {
@@ -41,6 +55,8 @@ export function ChatWorkspace(props: {
   const [remaining, setRemaining] = useState(props.remaining);
   const [toast, setToast] = useState<string | null>(null);
   const [panel, setPanel] = useState(false);
+  const [sheet, setSheet] = useState<"image" | "video" | null>(null);
+  const [balance, setBalance] = useState(props.balance);
   const abort = useRef<AbortController | null>(null);
   const bottom = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -127,6 +143,59 @@ export function ChatWorkspace(props: {
     run({ text: t });
   };
 
+  const pollJob = async (jobId: string, placeholderId: string) => {
+    for (let i = 0; i < 120; i++) {
+      await new Promise((res) => setTimeout(res, i < 5 ? 2500 : 5000));
+      const r = await fetch(`/api/generate/${jobId}`, { cache: "no-store" }).then((x) => x.json()).catch(() => null);
+      if (!r || r.status === "running" || r.status === "queued" || r.status === "finishing") continue;
+      if (r.status === "succeeded" && r.media) {
+        setMessages((m) => m.map((x) => (x.id === placeholderId ? { ...x, id: `media-${r.media.id}`, job: undefined, pending: false, media: r.media } : x)));
+      } else {
+        if (r.refunded) setBalance((b) => b + r.refunded);
+        const why = r.status === "blocked" ? "That one didn't pass our safety check. Sparks refunded." : "Generation failed. Sparks refunded.";
+        setMessages((m) => m.map((x) => (x.id === placeholderId ? { ...x, job: x.job && { ...x.job, error: why } } : x)));
+      }
+      return;
+    }
+  };
+
+  const createMedia = async (kind: "image" | "video", prompt: string, duration?: VideoDuration) => {
+    setSheet(null);
+    const placeholderId = `job-${Date.now()}`;
+    setMessages((m) => [
+      ...m,
+      { id: `req-${Date.now()}`, role: "user", content: `${kind === "image" ? "📷" : "🎬"} ${prompt}` },
+      { id: placeholderId, role: "assistant", content: "", job: { id: "", kind, duration } },
+    ]);
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ conversationId: props.conversationId, kind, prompt, duration }),
+    });
+    const j = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const why =
+        j.error === "blocked"
+          ? j.reason === "minor"
+            ? "Can't create that — anything involving minors is blocked."
+            : j.reason === "explicit"
+              ? "Can't create that — nudity and explicit content are blocked. Try something flirty instead."
+              : j.reason === "real_person"
+                ? "Can't create images of real people."
+                : "That request was blocked by our safety check."
+          : j.error === "insufficient_sparks"
+            ? "Not enough Sparks."
+            : j.error === "unavailable"
+              ? "Photos and videos aren't switched on yet."
+              : "Couldn't start that. Try again.";
+      setMessages((m) => m.map((x) => (x.id === placeholderId ? { ...x, job: x.job && { ...x.job, error: why } } : x)));
+      return;
+    }
+    setBalance((b) => Math.max(0, b - (j.cost ?? 0)));
+    setMessages((m) => m.map((x) => (x.id === placeholderId ? { ...x, job: x.job && { ...x.job, id: j.id } } : x)));
+    pollJob(j.id, placeholderId);
+  };
+
   const lastIsUser = messages.length > 0 && messages[messages.length - 1].role === "user";
   const disabled = !props.chatAvailable || remaining <= 0;
 
@@ -158,8 +227,13 @@ export function ChatWorkspace(props: {
               <Link href={`/companions/${c.slug}`} className="font-semibold hover:underline">{c.name}</Link>
               <span className="rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-semibold">AI</span>
             </div>
-            <div className="truncate text-xs text-ink-3">{c.occupation} · {c.city} · Voice &amp; images coming soon</div>
+            <div className="truncate text-xs text-ink-3">{c.occupation} · {c.city}</div>
           </div>
+          {props.features.voice && (
+            <Link href={`/app/call/${props.conversationId}`} className="glass inline-flex h-9 items-center gap-2 rounded-full px-3 text-xs font-semibold">
+              <Phone className="size-4 text-marigold" /> Call · ✦{sparkCosts.voicePerMinute}/min
+            </Link>
+          )}
           <button type="button" onClick={() => setPanel(true)} className="glass inline-flex h-9 items-center gap-2 rounded-full px-3 text-xs font-semibold lg:hidden">
             <Brain className="size-4 text-violet" /> Memory
           </button>
@@ -188,7 +262,33 @@ export function ChatWorkspace(props: {
 
           {messages.map((m) => (
             <div key={m.id} className={clsx("group flex max-w-[82%] flex-col gap-1 md:max-w-[68%]", m.role === "user" ? "self-end items-end" : "self-start")}>
-              {m.role === "assistant" && m.pending && !m.content ? (
+              {m.job ? (
+                <div className="flex w-[240px] flex-col gap-2 rounded-[20px_20px_20px_4px] bg-elevated p-4 text-[13px] text-ink-2">
+                  {m.job.error ? (
+                    <span>{m.job.error}</span>
+                  ) : (
+                    <>
+                      <span>{m.job.kind === "image" ? `${c.name} is getting ready for a photo…` : `${c.name} is filming a ${m.job.duration}s clip…`}</span>
+                      <span className="relative h-2 overflow-hidden rounded-full bg-surface">
+                        <span className="bg-saanjh animate-pulse-soft absolute inset-y-0 left-0 w-2/3 rounded-full" />
+                      </span>
+                      <span className="text-[11px] text-ink-3">{m.job.kind === "image" ? "Usually 10–30 seconds" : "Usually 1–4 minutes"} · refunded if it fails</span>
+                    </>
+                  )}
+                </div>
+              ) : m.media ? (
+                <figure className="overflow-hidden rounded-[20px_20px_20px_4px] bg-elevated">
+                  {!m.media.url ? (
+                    <div className="p-4 text-[13px] text-ink-3">Media unavailable</div>
+                  ) : m.media.kind === "image" ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- short-lived signed URL from private storage
+                    <img src={m.media.url} alt={`AI-generated photo of ${c.name}`} className="max-h-[420px] w-[260px] object-cover md:w-[300px]" />
+                  ) : (
+                    <video src={m.media.url} controls playsInline className="max-h-[480px] w-[260px] md:w-[300px]" />
+                  )}
+                  <figcaption className="px-3 py-1.5 text-[11px] text-ink-3">AI-generated · private to you</figcaption>
+                </figure>
+              ) : m.role === "assistant" && m.pending && !m.content ? (
                 <div className="flex items-center gap-2 rounded-[20px_20px_20px_4px] bg-elevated px-4 py-3" aria-label={`${c.name} is typing`}>
                   {[0, 0.2, 0.4].map((d) => (
                     <span key={d} className="animate-pulse-soft size-1.5 rounded-full bg-rani" style={{ animationDelay: `${d}s` }} />
@@ -205,7 +305,7 @@ export function ChatWorkspace(props: {
                   {m.content}
                 </div>
               )}
-              {m.role === "assistant" && !m.pending && !m.id.startsWith("reply-") && (
+              {m.role === "assistant" && !m.pending && !m.job && !/^(reply|media|job)-/.test(m.id) && (
                 <div className="flex gap-3 pl-1.5 text-ink-3 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 max-md:opacity-100">
                   <button type="button" aria-label="Copy" onClick={() => navigator.clipboard.writeText(m.content)} className="hover:text-ink"><Copy className="size-3.5" /></button>
                   <button type="button" aria-label="Good reply" aria-pressed={m.feedback === 1} onClick={() => feedback(m.id, 1)} className={clsx("hover:text-ink", m.feedback === 1 && "text-marigold")}><ThumbsUp className="size-3.5" /></button>
@@ -248,6 +348,20 @@ export function ChatWorkspace(props: {
             }}
             className="glass flex items-end gap-2 rounded-[26px] p-1.5 pl-4"
           >
+            {(props.features.image || props.features.video) && (
+              <div className="flex flex-none items-center gap-1 self-center">
+                {props.features.image && (
+                  <button type="button" onClick={() => setSheet("image")} aria-label={`Ask ${c.name} for a photo · ${sparkCosts.image} Sparks`} className="flex size-9 items-center justify-center rounded-full text-marigold hover:bg-white/10">
+                    <Camera className="size-[18px]" />
+                  </button>
+                )}
+                {props.features.video && (
+                  <button type="button" onClick={() => setSheet("video")} aria-label={`Ask ${c.name} for a video`} className="flex size-9 items-center justify-center rounded-full text-marigold hover:bg-white/10">
+                    <Clapperboard className="size-[18px]" />
+                  </button>
+                )}
+              </div>
+            )}
             <label htmlFor="composer" className="sr-only">Message {c.name}</label>
             <textarea
               ref={inputRef}
@@ -277,10 +391,14 @@ export function ChatWorkspace(props: {
             )}
           </form>
           <p className="mt-2 text-center text-[11px] text-ink-3">
-            Free chat · {remaining} of {props.dailyLimit} messages left today
+            Free chat · {remaining} of {props.dailyLimit} messages left today · <Link href="/app/wallet" className="text-marigold">✦ {balance}</Link>
           </p>
         </div>
       </section>
+
+      {sheet && (
+        <MediaSheet kind={sheet} name={c.name} balance={balance} onClose={() => setSheet(null)} onCreate={(p, d) => createMedia(sheet, p, d)} />
+      )}
 
       {/* Memory panel: side column on desktop, sheet on mobile */}
       <aside className="hidden min-h-0 border-l border-white/[.06] bg-surface lg:block">

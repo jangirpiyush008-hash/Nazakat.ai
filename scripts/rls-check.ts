@@ -53,7 +53,28 @@ try {
   const meter = await rest("rpc/consume_daily_message", B.h, { method: "POST", body: JSON.stringify({ uid: B.id, daily_limit: 60 }) });
   check("B can't call the metering function", !meter.ok, String(meter.status));
   const bal = await rest("rpc/spark_balance", A.h, { method: "POST", body: "{}" }).then((r) => r.json());
-  check("A sees own Spark balance (20)", bal === 20, String(bal));
+  check("A sees own Spark balance (50 welcome + 20)", bal === 70, String(bal));
+
+  // Media, jobs, calls and Sparks charging (v1.1)
+  const [job] = await rest("generation_jobs", admin, { method: "POST", body: JSON.stringify({ user_id: A.id, companion_id: comp.id, kind: "image", prompt: "test", sparks_cost: 10, provider: "fal", model: "test" }) }).then((r) => r.json());
+  await rest("call_sessions", admin, { method: "POST", body: JSON.stringify({ user_id: A.id, companion_id: comp.id, sparks_per_minute: 12 }) });
+  check("B can't read A's generation jobs", (await count("generation_jobs?select=id")) === 0);
+  check("B can't read A's calls", (await count("call_sessions?select=id")) === 0);
+  check("A can read own job", (await count("generation_jobs?select=id", A.h)) === 1);
+  const selfCharge = await rest("rpc/charge_sparks", B.h, { method: "POST", body: JSON.stringify({ uid: A.id, amount: 1, key: "x", ref: "x" }) });
+  check("B can't call charge_sparks", !selfCharge.ok, String(selfCharge.status));
+  const selfRefund = await rest("rpc/refund_sparks", B.h, { method: "POST", body: JSON.stringify({ uid: B.id, amount: 999, key: "y", ref: "y" }) });
+  check("B can't call refund_sparks", !selfRefund.ok, String(selfRefund.status));
+  const charge = (amount: number, key: string) => rest("rpc/charge_sparks", admin, { method: "POST", body: JSON.stringify({ uid: A.id, amount, key, ref: `image:${job.id}` }) }).then((r) => r.json());
+  check("server can charge 60 of 70", (await charge(60, `t-${job.id}`)) === true);
+  check("same charge key is idempotent", (await charge(60, `t-${job.id}`)) === true);
+  check("overspend is refused", (await charge(60, `t2-${job.id}`)) === false);
+  const after = await rest("rpc/spark_balance", A.h, { method: "POST", body: "{}" }).then((r) => r.json());
+  check("balance is 10 after one charge", after === 10, String(after));
+  await rest("rpc/refund_sparks", admin, { method: "POST", body: JSON.stringify({ uid: A.id, amount: 60, key: `r-${job.id}`, ref: "refund" }) });
+  await rest("rpc/refund_sparks", admin, { method: "POST", body: JSON.stringify({ uid: A.id, amount: 60, key: `r-${job.id}`, ref: "refund" }) });
+  const refunded = await rest("rpc/spark_balance", A.h, { method: "POST", body: "{}" }).then((r) => r.json());
+  check("refund is applied once (back to 70)", refunded === 70, String(refunded));
 } finally {
   for (const u of [A, B]) await fetch(`${url}/auth/v1/admin/users/${u.id}`, { method: "DELETE", headers: admin });
 }

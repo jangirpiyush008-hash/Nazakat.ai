@@ -24,9 +24,9 @@ export type Database = {
         Relationships: [];
       };
       companions: {
-        Row: { age: number; badge: string | null; bio: string; city: string; created_at: string; gender: Database["public"]["Enums"]["companion_gender"]; hook: string; id: string; interests: string[]; languages: string[]; name: string; occupation: string; portrait_path: string | null; quote: string; slug: string; sort_order: number; status: Database["public"]["Enums"]["companion_status"]; traits: string[]; updated_at: string; vibes: string[]; wash: string };
-        Insert: { age: number; badge?: string | null; bio: string; city: string; created_at?: string; gender: Database["public"]["Enums"]["companion_gender"]; hook: string; id?: string; interests?: string[]; languages?: string[]; name: string; occupation: string; portrait_path?: string | null; quote: string; slug: string; sort_order?: number; status?: Database["public"]["Enums"]["companion_status"]; traits?: string[]; updated_at?: string; vibes?: string[]; wash: string };
-        Update: { age?: number; badge?: string | null; bio?: string; city?: string; created_at?: string; gender?: Database["public"]["Enums"]["companion_gender"]; hook?: string; id?: string; interests?: string[]; languages?: string[]; name?: string; occupation?: string; portrait_path?: string | null; quote?: string; slug?: string; sort_order?: number; status?: Database["public"]["Enums"]["companion_status"]; traits?: string[]; updated_at?: string; vibes?: string[]; wash?: string };
+        Row: { age: number; badge: string | null; bio: string; city: string; created_at: string; gender: Database["public"]["Enums"]["companion_gender"]; hook: string; id: string; interests: string[]; languages: string[]; name: string; occupation: string; portrait_path: string | null; quote: string; slug: string; sort_order: number; status: Database["public"]["Enums"]["companion_status"]; traits: string[]; updated_at: string; vibes: string[]; wash: string; appearance: string | null; voice_id: string | null };
+        Insert: { age: number; badge?: string | null; bio: string; city: string; created_at?: string; gender: Database["public"]["Enums"]["companion_gender"]; hook: string; id?: string; interests?: string[]; languages?: string[]; name: string; occupation: string; portrait_path?: string | null; quote: string; slug: string; sort_order?: number; status?: Database["public"]["Enums"]["companion_status"]; traits?: string[]; updated_at?: string; vibes?: string[]; wash: string; appearance?: string | null; voice_id?: string | null };
+        Update: { age?: number; badge?: string | null; bio?: string; city?: string; created_at?: string; gender?: Database["public"]["Enums"]["companion_gender"]; hook?: string; id?: string; interests?: string[]; languages?: string[]; name?: string; occupation?: string; portrait_path?: string | null; quote?: string; slug?: string; sort_order?: number; status?: Database["public"]["Enums"]["companion_status"]; traits?: string[]; updated_at?: string; vibes?: string[]; wash?: string; appearance?: string | null; voice_id?: string | null };
         Relationships: [];
       };
       consent_records: {
@@ -60,15 +60,33 @@ export type Database = {
         Relationships: [];
       };
       messages: {
-        Row: { content: string; conversation_id: string; created_at: string; feedback: number | null; id: string; input_tokens: number | null; model: string | null; moderation: Database["public"]["Enums"]["moderation_status"]; output_tokens: number | null; provider: string | null; provider_request_id: string | null; role: Database["public"]["Enums"]["message_role"]; updated_at: string; user_id: string };
-        Insert: { content: string; conversation_id: string; created_at?: string; feedback?: number | null; id?: string; input_tokens?: number | null; model?: string | null; moderation?: Database["public"]["Enums"]["moderation_status"]; output_tokens?: number | null; provider?: string | null; provider_request_id?: string | null; role: Database["public"]["Enums"]["message_role"]; updated_at?: string; user_id: string };
-        Update: { content?: string; conversation_id?: string; created_at?: string; feedback?: number | null; id?: string; input_tokens?: number | null; model?: string | null; moderation?: Database["public"]["Enums"]["moderation_status"]; output_tokens?: number | null; provider?: string | null; provider_request_id?: string | null; role?: Database["public"]["Enums"]["message_role"]; updated_at?: string; user_id?: string };
+        Row: { content: string; conversation_id: string; created_at: string; feedback: number | null; id: string; input_tokens: number | null; model: string | null; moderation: Database["public"]["Enums"]["moderation_status"]; output_tokens: number | null; provider: string | null; provider_request_id: string | null; role: Database["public"]["Enums"]["message_role"]; updated_at: string; user_id: string; media_id: string | null };
+        Insert: { content: string; conversation_id: string; created_at?: string; feedback?: number | null; id?: string; input_tokens?: number | null; model?: string | null; moderation?: Database["public"]["Enums"]["moderation_status"]; output_tokens?: number | null; provider?: string | null; provider_request_id?: string | null; role: Database["public"]["Enums"]["message_role"]; updated_at?: string; user_id: string; media_id?: string | null };
+        Update: { content?: string; conversation_id?: string; created_at?: string; feedback?: number | null; id?: string; input_tokens?: number | null; model?: string | null; moderation?: Database["public"]["Enums"]["moderation_status"]; output_tokens?: number | null; provider?: string | null; provider_request_id?: string | null; role?: Database["public"]["Enums"]["message_role"]; updated_at?: string; user_id?: string; media_id?: string | null };
         Relationships: [];
       };
       profiles: {
         Row: { age_confirmed_at: string | null; chat_language: string; created_at: string; deletion_requested_at: string | null; discreet_mode: boolean; display_name: string | null; id: string; interest: Database["public"]["Enums"]["companion_gender"]; memory_enabled: boolean; onboarded_at: string | null; reduce_motion: boolean; spicy_animations: boolean; timezone: string; ui_locale: string; updated_at: string };
         Insert: { age_confirmed_at?: string | null; chat_language?: string; created_at?: string; deletion_requested_at?: string | null; discreet_mode?: boolean; display_name?: string | null; id: string; interest?: Database["public"]["Enums"]["companion_gender"]; memory_enabled?: boolean; onboarded_at?: string | null; reduce_motion?: boolean; spicy_animations?: boolean; timezone?: string; ui_locale?: string; updated_at?: string };
         Update: { age_confirmed_at?: string | null; chat_language?: string; created_at?: string; deletion_requested_at?: string | null; discreet_mode?: boolean; display_name?: string | null; id?: string; interest?: Database["public"]["Enums"]["companion_gender"]; memory_enabled?: boolean; onboarded_at?: string | null; reduce_motion?: boolean; spicy_animations?: boolean; timezone?: string; ui_locale?: string; updated_at?: string };
+        Relationships: [];
+      };
+      media_assets: {
+        Row: { id: string; user_id: string; companion_id: string; kind: Database["public"]["Enums"]["media_kind"]; storage_path: string; content_type: string; width: number | null; height: number | null; duration_s: number | null; prompt: string; ai_generated: boolean; created_at: string; updated_at: string };
+        Insert: { id?: string; user_id: string; companion_id: string; kind: Database["public"]["Enums"]["media_kind"]; storage_path: string; content_type: string; width?: number | null; height?: number | null; duration_s?: number | null; prompt: string; ai_generated?: boolean; created_at?: string; updated_at?: string };
+        Update: { id?: string; user_id?: string; companion_id?: string; kind?: Database["public"]["Enums"]["media_kind"]; storage_path?: string; content_type?: string; width?: number | null; height?: number | null; duration_s?: number | null; prompt?: string; ai_generated?: boolean; created_at?: string; updated_at?: string };
+        Relationships: [];
+      };
+      generation_jobs: {
+        Row: { id: string; user_id: string; companion_id: string; conversation_id: string | null; kind: Database["public"]["Enums"]["media_kind"]; prompt: string; duration_s: number | null; status: Database["public"]["Enums"]["job_status"]; sparks_cost: number; provider: string; model: string; provider_request_id: string | null; status_url: string | null; response_url: string | null; media_id: string | null; error_code: string | null; finished_at: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; user_id: string; companion_id: string; conversation_id?: string | null; kind: Database["public"]["Enums"]["media_kind"]; prompt: string; duration_s?: number | null; status?: Database["public"]["Enums"]["job_status"]; sparks_cost: number; provider: string; model: string; provider_request_id?: string | null; status_url?: string | null; response_url?: string | null; media_id?: string | null; error_code?: string | null; finished_at?: string | null; created_at?: string; updated_at?: string };
+        Update: { id?: string; user_id?: string; companion_id?: string; conversation_id?: string | null; kind?: Database["public"]["Enums"]["media_kind"]; prompt?: string; duration_s?: number | null; status?: Database["public"]["Enums"]["job_status"]; sparks_cost?: number; provider?: string; model?: string; provider_request_id?: string | null; status_url?: string | null; response_url?: string | null; media_id?: string | null; error_code?: string | null; finished_at?: string | null; created_at?: string; updated_at?: string };
+        Relationships: [];
+      };
+      call_sessions: {
+        Row: { id: string; user_id: string; companion_id: string; conversation_id: string | null; status: string; minutes_charged: number; sparks_per_minute: number; started_at: string; ended_at: string | null; created_at: string; updated_at: string };
+        Insert: { id?: string; user_id: string; companion_id: string; conversation_id?: string | null; status?: string; minutes_charged?: number; sparks_per_minute: number; started_at?: string; ended_at?: string | null; created_at?: string; updated_at?: string };
+        Update: { id?: string; user_id?: string; companion_id?: string; conversation_id?: string | null; status?: string; minutes_charged?: number; sparks_per_minute?: number; started_at?: string; ended_at?: string | null; created_at?: string; updated_at?: string };
         Relationships: [];
       };
       reports: {
@@ -83,6 +101,9 @@ export type Database = {
       complete_onboarding: { Args: { analytics: boolean; chat_language: string; consent_version: string; interest: Database["public"]["Enums"]["companion_gender"]; marketing: boolean }; Returns: undefined };
       consume_daily_message: { Args: { daily_limit: number; uid: string }; Returns: number };
       spark_balance: { Args: never; Returns: number };
+      spark_balance_of: { Args: { uid: string }; Returns: number };
+      charge_sparks: { Args: { uid: string; amount: number; key: string; ref: string }; Returns: boolean };
+      refund_sparks: { Args: { uid: string; amount: number; key: string; ref: string }; Returns: undefined };
     };
     Enums: {
       app_role: "support" | "moderator" | "content_editor" | "finance" | "super_admin";
@@ -96,6 +117,8 @@ export type Database = {
       moderation_status: "unchecked" | "passed" | "flagged" | "blocked";
       report_status: "open" | "in_review" | "actioned" | "dismissed";
       report_target: "companion" | "message" | "media" | "account";
+      media_kind: "image" | "video";
+      job_status: "queued" | "running" | "finishing" | "succeeded" | "failed" | "blocked" | "canceled";
     };
     CompositeTypes: { [_ in never]: never };
   };

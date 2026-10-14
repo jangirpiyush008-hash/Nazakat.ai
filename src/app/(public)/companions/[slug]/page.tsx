@@ -32,9 +32,9 @@ export default async function CompanionPage({ params }: { params: Params }) {
 
   const modalities = [
     { label: "Text chat", value: "Free · daily limit", tone: "ink-2", on: true },
-    { label: "Images", value: caps.image === "available" ? `✦ ${sparkCosts.image} each` : "Coming soon", tone: "gold", on: caps.image === "available" },
+    { label: "Photos", value: caps.image === "available" ? `✦ ${sparkCosts.image} each` : "Coming soon", tone: "gold", on: caps.image === "available" },
     { label: "Voice call", value: caps.voice === "available" ? `✦ ${sparkCosts.voicePerMinute} / min` : "Coming soon", tone: "gold", on: caps.voice === "available" },
-    { label: "Video", value: "Coming soon", tone: "muted", on: false },
+    { label: "Videos (5–15s)", value: caps.video === "available" ? `from ✦ ${sparkCosts.video[5]}` : "Coming soon", tone: "gold", on: caps.video === "available" },
   ];
 
   return (

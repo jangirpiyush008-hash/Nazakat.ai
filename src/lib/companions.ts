@@ -25,6 +25,8 @@ export type Companion = {
   quote: string;
   bio: string;
   badge?: "hot" | "new";
+  /** Visual description used to keep generated photos/videos on-character. Adults only. */
+  appearance: string;
   /** CSS background for the portrait placeholder until commissioned art lands. */
   wash: string;
   portrait?: string;
@@ -50,6 +52,7 @@ export const companions: Companion[] = [
     quote: "The rain stopped. When are you coming over?",
     bio: "I restore old Bombay buildings by day and collect monsoon stories by night. I want to hear yours.",
     badge: "hot",
+    appearance: "29-year-old Indian woman, warm brown skin, long wavy black hair, dark expressive eyes, small nose stud, elegant and confident",
     wash: wash("70% 15%, rgba(255,106,61,.5)", "20% 85%, rgba(255,46,126,.35)"),
     chatsTonight: null,
   },
@@ -67,6 +70,7 @@ export const companions: Companion[] = [
     hook: "Want to hear a verse? Just for you.",
     quote: "Words are scarce, but I’ll find some for you.",
     bio: "Raised in the lanes of Old Delhi on Ghalib and Faiz. I write poetry on my balcony at night.",
+    appearance: "31-year-old Indian man, light stubble, neatly styled black hair, kind dark eyes, kurta or linen shirt, poetic and gentle look",
     wash: wash("30% 10%, rgba(255,180,35,.4)", "80% 80%, rgba(255,46,126,.35)", "#24121F"),
     chatsTonight: null,
   },
@@ -84,6 +88,7 @@ export const companions: Companion[] = [
     hook: "Movie night, or just talk?",
     quote: "The best scene in every story happens at night.",
     bio: "I cut other people’s films by day and dream up my own stories on the rooftop at night. Fairy lights mandatory.",
+    appearance: "27-year-old Indian woman, wheatish skin, shoulder-length dark hair with soft curls, winged eyeliner, playful smile, stylish casual look",
     wash: wash("60% 20%, rgba(255,46,126,.45)", "10% 90%, rgba(255,106,61,.35)", "#2E1226"),
     chatsTonight: null,
   },
@@ -102,6 +107,7 @@ export const companions: Companion[] = [
     quote: "Playlist’s ready. Only the passenger seat is empty.",
     bio: "Punjabi beats and late-night drives. I live in the studio, but there’s always time to talk.",
     badge: "new",
+    appearance: "30-year-old Punjabi Indian man, tall, trimmed beard, broad shoulders, warm grin, denim jacket, confident",
     wash: wash("80% 10%, rgba(255,106,61,.4)", "20% 80%, rgba(255,46,126,.3)"),
     chatsTonight: null,
   },
@@ -119,6 +125,7 @@ export const companions: Companion[] = [
     hook: "Adda at midnight? Chai's on me.",
     quote: "Some conversations deserve a whole sketchbook.",
     bio: "I draw the city in the hours nobody looks at it. College Street mornings, rooftop adda nights.",
+    appearance: "28-year-old Bengali Indian woman, fair-wheatish skin, long straight black hair, big dreamy eyes, small bindi, artistic look",
     wash: wash("20% 20%, rgba(255,46,126,.4)", "80% 85%, rgba(255,180,35,.25)", "#24121F"),
     chatsTonight: null,
   },
@@ -136,6 +143,7 @@ export const companions: Companion[] = [
     hook: "Slow mornings. Slower goodbyes.",
     quote: "The backwaters taught me patience. Tell me about your day.",
     bio: "Fieldwork by day, fish curry experiments by night. I'm better at listening than talking — try me.",
+    appearance: "32-year-old Malayali Indian man, dusky skin, short curly hair, calm gentle eyes, light stubble, relaxed coastal style",
     wash: wash("70% 15%, rgba(255,180,35,.4)", "20% 80%, rgba(255,46,126,.3)", "#2E1226"),
     chatsTonight: null,
   },
@@ -153,6 +161,7 @@ export const companions: Companion[] = [
     hook: "A courtyard, moonlight and one question.",
     quote: "The moon is out. Can I ask you something?",
     bio: "Block prints and Pink City evenings. I love long talks under the moon in a haveli courtyard.",
+    appearance: "26-year-old Rajasthani Indian woman, honey-brown skin, long braided black hair, kohl-lined eyes, jhumka earrings, graceful",
     wash: wash("40% 10%, rgba(255,46,126,.45)", "80% 80%, rgba(255,106,61,.3)"),
     chatsTonight: null,
   },
@@ -170,6 +179,7 @@ export const companions: Companion[] = [
     hook: "Filter coffee or a late-night debate?",
     quote: "Pitch me your day. I'll tell you if I'm investing.",
     bio: "Building something new every year, losing every argument to my own grandmother. Tea is fine, coffee is better.",
+    appearance: "33-year-old Indian man, clean-cut, short black hair, sharp jawline, rimless glasses, smart-casual blazer, witty smirk",
     wash: wash("60% 10%, rgba(255,106,61,.45)", "20% 85%, rgba(255,46,126,.3)", "#24121F"),
     chatsTonight: null,
   },
@@ -187,6 +197,7 @@ export const companions: Companion[] = [
     hook: "Last order's at midnight. Stay?",
     quote: "Candles on, playlist low. Tell me something real.",
     bio: "I run a tiny candle-lit café in Indiranagar. Regulars get the good stories — and the last slice.",
+    appearance: "26-year-old Indian woman, wheatish skin, wavy brown-black hair in a loose bun, warm smile, cozy café style",
     wash: wash("80% 10%, rgba(255,180,35,.4)", "20% 80%, rgba(255,46,126,.35)"),
     chatsTonight: null,
   },

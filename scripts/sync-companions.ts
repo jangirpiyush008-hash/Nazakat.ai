@@ -13,7 +13,7 @@ for (const [i, c] of companions.entries()) {
   const row = {
     name: c.name, age: c.age, city: c.city, occupation: c.occupation, gender: c.gender,
     languages: c.languages, vibes: c.vibes, interests: c.interests, traits: c.traits,
-    hook: c.hook, quote: c.quote, bio: c.bio, badge: c.badge ?? null, wash: c.wash,
+    hook: c.hook, quote: c.quote, bio: c.bio, badge: c.badge ?? null, wash: c.wash, appearance: c.appearance,
     status: "published", sort_order: (i + 1) * 10,
   };
   const res = await fetch(`${url}/rest/v1/companions?slug=eq.${c.slug}`, { method: "PATCH", headers, body: JSON.stringify(row) });

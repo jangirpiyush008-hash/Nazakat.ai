@@ -48,7 +48,32 @@ export const sparkPacks = [
   { sparks: 1500, pricePaise: 99900 },
 ];
 
-export const sparkCosts = { image: 8, voicePerMinute: 4 } as const;
+/**
+ * Sparks per action. 1 Spark is roughly ₹1 at pack prices (₹99 = 100 ✦).
+ * Defaults leave margin over typical provider cost; check against your fal.ai
+ * and ElevenLabs invoices and override with env vars without a code change.
+ */
+const envInt = (raw: string | undefined, fallback: number) => {
+  const v = Number(raw);
+  return Number.isFinite(v) && v > 0 ? Math.round(v) : fallback;
+};
+
+export const videoDurations = [5, 8, 10, 15] as const;
+export type VideoDuration = (typeof videoDurations)[number];
+
+export const sparkCosts = {
+  image: envInt(process.env.NEXT_PUBLIC_SPARKS_IMAGE, 10),
+  video: {
+    5: envInt(process.env.NEXT_PUBLIC_SPARKS_VIDEO_5, 60),
+    8: envInt(process.env.NEXT_PUBLIC_SPARKS_VIDEO_8, 95),
+    10: envInt(process.env.NEXT_PUBLIC_SPARKS_VIDEO_10, 120),
+    15: envInt(process.env.NEXT_PUBLIC_SPARKS_VIDEO_15, 180),
+  } satisfies Record<VideoDuration, number>,
+  voicePerMinute: envInt(process.env.NEXT_PUBLIC_SPARKS_CALL_MINUTE, 12),
+};
+
+/** One-time promo Sparks on finishing onboarding (set in SQL: complete_onboarding). */
+export const WELCOME_SPARKS = 50;
 
 export function formatINR(paise: number) {
   return new Intl.NumberFormat("en-IN", {

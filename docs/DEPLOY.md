@@ -18,6 +18,12 @@ Railway builds from `main` on GitHub automatically (`pnpm build`, then `pnpm sta
 | `AI_CHAT_MODEL` | `claude-opus-5-5` or `claude-haiku-5-5` | chat |
 | `FREE_DAILY_MESSAGES` | `60` | free tier |
 | `AUTH_PHONE_ENABLED` / `AUTH_GOOGLE_ENABLED` / `AUTH_DISCORD_ENABLED` | `true` once the provider is set up in Supabase | extra sign-in methods |
+| `FAL_KEY` | fal.ai → Dashboard → Keys | photos and videos |
+| `FEATURE_IMAGE_GEN` / `FEATURE_VIDEO_GEN` | `true` | turn photos / videos on |
+| `ELEVENLABS_API_KEY` | elevenlabs.io → API keys | voice calls |
+| `FEATURE_VOICE_CALLS` | `true` | turn voice calls on |
+| `ELEVENLABS_VOICE_FEMALE` / `ELEVENLABS_VOICE_MALE` | voice IDs from the Voice Library (optional) | Indian-accent voices |
+| `NEXT_PUBLIC_SPARKS_*` | see `.env.example` (optional) | Sparks prices |
 
 ## Supabase → Authentication → URL Configuration
 

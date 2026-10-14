@@ -44,6 +44,26 @@ export function streamReply(opts: { system: string; persona: string; history: Tu
   );
 }
 
+/** Short non-streaming reply for voice calls (spoken aloud, so 1–2 sentences). */
+export async function replyOnce(opts: { system: string; persona: string; history: Turn[]; context: string }) {
+  const anthropic = getClient();
+  if (!anthropic) return null;
+  const res = await anthropic.beta.messages.create({
+    model: chatModel(),
+    max_tokens: 1024,
+    betas: ["server-side-fallback-2026-07-01"],
+    fallbacks: "default",
+    output_config: { effort: "low" },
+    system: [
+      { type: "text", text: opts.system },
+      { type: "text", text: opts.persona, cache_control: { type: "ephemeral" } },
+    ],
+    messages: [...opts.history.map((t) => ({ role: t.role, content: t.content })), { role: "system" as const, content: opts.context }],
+  });
+  if (res.stop_reason === "refusal") return null;
+  return res.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join(" ").trim();
+}
+
 const memorySchema = z.object({
   memories: z
     .array(z.object({ fact: z.string().min(2).max(200), category: z.enum(["preference", "place", "name", "date", "other"]) }))
