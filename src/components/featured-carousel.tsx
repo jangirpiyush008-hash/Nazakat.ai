@@ -16,7 +16,7 @@ export type FeaturedSlide = {
 
 const INTERVAL = 6000;
 
-export function FeaturedCarousel({ slides }: { slides: FeaturedSlide[] }) {
+export function FeaturedCarousel({ slides, hrefFor = (slug: string) => `/companions/${slug}` }: { slides: FeaturedSlide[]; hrefFor?: (slug: string) => string }) {
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
   const go = useCallback((d: number) => setI((n) => (n + d + slides.length) % slides.length), [slides.length]);
@@ -60,7 +60,7 @@ export function FeaturedCarousel({ slides }: { slides: FeaturedSlide[] }) {
             <p className="font-display text-lg italic md:text-[22px]">“{s.quote}”</p>
             <p className="text-[13px] text-ink-2">{s.meta}</p>
             <Link
-              href={`/companions/${s.slug}`}
+              href={hrefFor(s.slug)}
               tabIndex={n === i ? 0 : -1}
               className="bg-saanjh inline-flex h-12 items-center gap-2 self-start rounded-[14px] px-[22px] text-sm font-semibold text-white shadow-glow-sm"
             >

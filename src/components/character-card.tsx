@@ -22,11 +22,24 @@ function formatCount(n: number) {
   return n >= 1000 ? `${(n / 1000).toFixed(1).replace(/\.0$/, "")}K` : String(n);
 }
 
-export function CharacterCard({ companion, showTags = true, className }: { companion: Companion; showTags?: boolean; className?: string }) {
+export function CharacterCard({
+  companion,
+  showTags = true,
+  href,
+  ctaAlwaysVisible = false,
+  className,
+}: {
+  companion: Companion;
+  showTags?: boolean;
+  /** Defaults to the public profile; the signed-in app links straight into chat. */
+  href?: string;
+  ctaAlwaysVisible?: boolean;
+  className?: string;
+}) {
   const c = companion;
   return (
     <Link
-      href={`/companions/${c.slug}`}
+      href={href ?? `/companions/${c.slug}`}
       className={clsx(
         "group relative block aspect-[3/4] overflow-hidden rounded-[20px] transition-all duration-200 ease-out",
         "hover:-translate-y-1.5 hover:shadow-[0_0_0_2px_#FF2E7E,0_20px_60px_rgba(255,46,126,.3)]",
@@ -64,7 +77,7 @@ export function CharacterCard({ companion, showTags = true, className }: { compa
             {formatCount(c.chatsTonight)} chats tonight
           </div>
         )}
-        <span className="bg-saanjh mt-1 hidden h-9 items-center justify-center rounded-[10px] text-[13px] font-semibold text-white group-hover:flex group-focus-visible:flex">
+        <span className={clsx("bg-saanjh mt-1 h-9 items-center justify-center rounded-[10px] text-[13px] font-semibold text-white", ctaAlwaysVisible ? "flex" : "hidden group-hover:flex group-focus-visible:flex")}>
           Chat now →
         </span>
       </div>

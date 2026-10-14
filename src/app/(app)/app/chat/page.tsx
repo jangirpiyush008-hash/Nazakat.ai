@@ -1,73 +1,46 @@
-import Link from "next/link";
+import { companions as catalogue, languageLabels } from "@/lib/companions";
 import { requireOnboarded } from "@/server/session";
+import { AppHome, type RecentChat } from "@/components/app-home";
+import type { FeaturedSlide } from "@/components/featured-carousel";
 
 export const metadata = { title: "Chats" };
 
-function ago(iso: string | null) {
-  if (!iso) return "New";
-  const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
-  if (mins < 1) return "now";
-  if (mins < 60) return `${mins}m`;
-  if (mins < 1440) return `${Math.round(mins / 60)}h`;
-  return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "Asia/Kolkata" });
-}
-
+/** Signed-in home: featured companions, continue-chatting rail, filterable catalogue. */
 export default async function ChatsPage() {
   const { supabase, profile } = await requireOnboarded("/app/chat");
-  const [{ data: convos }, { data: companions }] = await Promise.all([
-    supabase.from("conversations").select("id, companion_id, last_message_at").order("last_message_at", { ascending: false, nullsFirst: false }).limit(50),
-    supabase.from("companions").select("id, slug, name, age, city, hook, wash, gender").order("sort_order"),
+  const [{ data: convos }, { data: dbCompanions }] = await Promise.all([
+    supabase.from("conversations").select("id, companion_id, last_message_at").order("last_message_at", { ascending: false, nullsFirst: false }).limit(20),
+    supabase.from("companions").select("id, slug").eq("status", "published"),
   ]);
-  const byId = new Map((companions ?? []).map((c) => [c.id, c]));
-  const chatting = new Set((convos ?? []).map((c) => c.companion_id));
-  const suggestions = (companions ?? []).filter((c) => !chatting.has(c.id) && (profile.interest === "anime" || c.gender === profile.interest)).slice(0, 6);
+  const slugById = new Map((dbCompanions ?? []).map((c) => [c.id, c.slug]));
+  const published = new Set((dbCompanions ?? []).map((c) => c.slug));
+  const bySlug = new Map(catalogue.map((c) => [c.slug, c]));
 
-  return (
-    <main className="mx-auto flex max-w-[760px] flex-col gap-8 px-4 py-6 md:py-10">
-      <section className="flex flex-col gap-3">
-        <h1 className="font-display text-[32px] font-light">Chats</h1>
-        {convos?.length ? (
-          <ul className="flex flex-col gap-1">
-            {convos.map((cv) => {
-              const c = byId.get(cv.companion_id);
-              if (!c) return null;
-              return (
-                <li key={cv.id}>
-                  <Link href={`/app/chat/${cv.id}`} className="flex items-center gap-3.5 rounded-2xl p-3 hover:bg-surface">
-                    <span className="size-12 flex-none rounded-full shadow-[0_0_0_2px_#FFB423]" style={{ background: c.wash }} />
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-baseline justify-between gap-2">
-                        <span className="font-semibold">{c.name}</span>
-                        <span className="text-xs text-ink-3">{ago(cv.last_message_at)}</span>
-                      </span>
-                      <span className="block truncate text-[13px] text-ink-2">{c.hook}</span>
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <p className="rounded-2xl bg-surface p-5 text-sm text-ink-2">No chats yet. Pick someone below to start.</p>
-        )}
-      </section>
+  // Last message per conversation for the "Continue chatting" rail.
+  const ids = (convos ?? []).map((c) => c.id);
+  const { data: lastMsgs } = ids.length
+    ? await supabase.from("messages").select("conversation_id, role, content, created_at").in("conversation_id", ids).order("created_at", { ascending: false }).limit(200)
+    : { data: [] };
+  const latest = new Map<string, { role: string; content: string }>();
+  for (const m of lastMsgs ?? []) if (!latest.has(m.conversation_id)) latest.set(m.conversation_id, m);
 
-      {suggestions.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <h2 className="label-caps text-ink-3">Start a new chat</h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {suggestions.map((c) => (
-              <Link key={c.id} href={`/app/chat/new?c=${c.slug}`} className="relative flex aspect-[3/4] items-end overflow-hidden rounded-[20px] p-3" style={{ background: c.wash }}>
-                <span className="absolute inset-0 bg-[linear-gradient(180deg,transparent_50%,rgba(10,7,9,.95)_92%)]" />
-                <span className="relative">
-                  <span className="block font-display text-xl">{c.name}</span>
-                  <span className="text-xs text-ink-2">{c.age} · {c.city}</span>
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-    </main>
-  );
+  const recent: RecentChat[] = (convos ?? []).flatMap((cv) => {
+    const c = bySlug.get(slugById.get(cv.companion_id) ?? "");
+    if (!c) return [];
+    const last = latest.get(cv.id);
+    return [{ id: cv.id, slug: c.slug, name: c.name, wash: c.wash, preview: last ? `${last.role === "user" ? "You: " : ""}${last.content}` : c.hook, at: cv.last_message_at }];
+  });
+
+  const companions = catalogue.filter((c) => published.has(c.slug));
+  const forYou = profile.interest === "anime" ? companions : companions.filter((c) => c.gender === profile.interest);
+  const slides: FeaturedSlide[] = (forYou.length ? forYou : companions).slice(0, 4).map((c) => ({
+    slug: c.slug,
+    name: c.name,
+    age: c.age,
+    quote: c.quote,
+    wash: c.wash,
+    meta: `${c.occupation} · ${c.city} · ${languageLabels[c.languages[0]].label} · AI character`,
+  }));
+
+  return <AppHome recent={recent} companions={companions} slides={slides} interest={profile.interest} />;
 }
