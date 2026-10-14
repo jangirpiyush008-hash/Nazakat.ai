@@ -15,8 +15,8 @@ const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const SPICY = process.env.SPICYAPI_API_KEY;
 const SERVER = process.env.PORTRAIT_API_BASE || "https://nazakatai-production.up.railway.app";
-const CHECK_KEY = process.env.AI_CHAT_API_KEY!;
-for (const [k, v] of Object.entries({ NEXT_PUBLIC_SUPABASE_URL: SUPABASE, SUPABASE_SERVICE_ROLE_KEY: SERVICE, AI_CHAT_API_KEY: CHECK_KEY })) {
+const CHECK_KEY = process.env.AI_CHAT_API_KEY;
+for (const [k, v] of Object.entries({ NEXT_PUBLIC_SUPABASE_URL: SUPABASE, SUPABASE_SERVICE_ROLE_KEY: SERVICE })) {
   if (!v) throw new Error(`Set ${k} in .env.local`);
 }
 
@@ -133,8 +133,13 @@ async function generate(model: string, input: Record<string, unknown>): Promise<
 }
 
 // ---------- Claude Haiku image check (same rules as src/server/media/image-check.ts) ----------
-const claude = new Anthropic({ apiKey: CHECK_KEY, timeout: 60_000, maxRetries: 2 });
+const claude = CHECK_KEY ? new Anthropic({ apiKey: CHECK_KEY, timeout: 60_000, maxRetries: 2 }) : null;
 async function check(url: string): Promise<string | null> {
+  if (!claude) {
+    // The live server runs the same check (Claude Haiku via SpicyAPI).
+    const v = await spicy({ action: "check", url });
+    return v.ok === true ? null : String(v.reason ?? "unavailable");
+  }
   const res = await claude.messages.create({
     model: process.env.IMAGE_CHECK_MODEL || "claude-haiku-5-5",
     max_tokens: 400,

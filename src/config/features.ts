@@ -25,7 +25,7 @@ export function getCapabilities() {
     } satisfies AuthMethods,
     chat: has("SUPABASE_SERVICE_ROLE_KEY") && (has("AI_CHAT_API_KEY") || has("DEEPSEEK_API_KEY") || has("SARVAM_API_KEY")),
     // SpicyAPI photos are only shown after our own image check passes, so that check must be configured too.
-    image: (has("SUPABASE_SERVICE_ROLE_KEY") && (has("FAL_KEY") || has("SPICYAPI_API_KEY", "AI_CHAT_API_KEY")) && enabled(process.env.FEATURE_IMAGE_GEN) ? "available" : "coming_soon") as Availability,
+    image: (has("SUPABASE_SERVICE_ROLE_KEY") && (has("FAL_KEY") || has("SPICYAPI_API_KEY")) && enabled(process.env.FEATURE_IMAGE_GEN) ? "available" : "coming_soon") as Availability,
     video: (has("SUPABASE_SERVICE_ROLE_KEY") && (has("FAL_KEY") || has("SPICYAPI_API_KEY")) && enabled(process.env.FEATURE_VIDEO_GEN) ? "available" : "coming_soon") as Availability,
     voice: ((has("SARVAM_API_KEY") || has("ELEVENLABS_API_KEY")) && (has("AI_CHAT_API_KEY") || has("DEEPSEEK_API_KEY") || has("SARVAM_API_KEY")) && has("SUPABASE_SERVICE_ROLE_KEY") && enabled(process.env.FEATURE_VOICE_CALLS)
       ? "available"

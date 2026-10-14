@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
+import { checkImage } from "@/server/media/image-check";
 import { spicyCreate, spicyModels, spicyStatus } from "@/server/media/spicy";
 
 export const runtime = "nodejs";
@@ -13,6 +14,7 @@ export const runtime = "nodejs";
 const body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("create"), model: z.string(), input: z.record(z.string(), z.unknown()), idempotencyKey: z.string().uuid() }),
   z.object({ action: z.literal("status"), taskId: z.string().min(4).max(120) }),
+  z.object({ action: z.literal("check"), url: z.string().url() }),
 ]);
 
 function authorised(request: NextRequest) {
@@ -28,6 +30,7 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: "invalid" }, { status: 400 });
   try {
     if (parsed.data.action === "status") return NextResponse.json(await spicyStatus(parsed.data.taskId));
+    if (parsed.data.action === "check") return NextResponse.json(await checkImage(parsed.data.url, null));
     const allowed = [spicyModels.textToImage(), spicyModels.faceEdit()];
     if (!allowed.includes(parsed.data.model)) return NextResponse.json({ error: "model_not_allowed" }, { status: 400 });
     return NextResponse.json(await spicyCreate(parsed.data.model, parsed.data.input, parsed.data.idempotencyKey));
