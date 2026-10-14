@@ -112,7 +112,20 @@ async function spicy(action: Record<string, unknown>) {
     const url = j.data.output?.assets?.find((x: { url?: string }) => x.url)?.url;
     return st === "succeeded" && url ? { state: "succeeded", url } : { state: "failed", code: j.data.errorCode || st };
   }
-  const res = await fetch(`${SERVER}/api/admin/spicy`, { method: "POST", headers: { Authorization: `Bearer ${SERVICE}`, "Content-Type": "application/json" }, body: JSON.stringify(action) });
+  // Network hiccups (DNS, deploy restarts) are waited out rather than failing the character.
+  let res: Response | null = null;
+  for (let attempt = 0; !res; attempt++) {
+    try {
+      res = await fetch(`${SERVER}/api/admin/spicy`, { method: "POST", headers: { Authorization: `Bearer ${SERVICE}`, "Content-Type": "application/json" }, body: JSON.stringify(action) });
+      if (res.status >= 502 && res.status <= 504 && attempt < 30) {
+        res = null;
+        throw new Error("gateway");
+      }
+    } catch (err) {
+      if (attempt >= 30) throw err;
+      await new Promise((r) => setTimeout(r, 15000));
+    }
+  }
   const j = (await res.json().catch(() => ({}))) as Json;
   if (!res.ok) throw new Error(`server ${res.status} ${j.error ?? ""}`);
   return j;

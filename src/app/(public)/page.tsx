@@ -38,7 +38,7 @@ const faqs = [
 const yearly = plusOffer("yearly");
 
 export default function HomePage() {
-  const trending = [...companions].sort((a, b) => Number(b.badge === "hot") - Number(a.badge === "hot")).slice(0, 12);
+  const trending = [...companions].sort((a, b) => Number(Boolean(b.portrait)) - Number(Boolean(a.portrait)) || Number(b.badge === "hot") - Number(a.badge === "hot")).slice(0, 12);
   const bySlug = Object.fromEntries(companions.map((c) => [c.slug, c]));
 
   return (

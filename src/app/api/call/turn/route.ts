@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     const context =
       contextMessage({ language: profile.chat_language, memories: profile.memory_enabled ? (memories ?? []).map((m) => m.fact) : [], displayName: profile.display_name }) +
       "\nThis is a live voice call. Reply in 1–2 short, natural spoken sentences. No emojis, lists or stage directions.";
-    const raw = await completeText({ system: `${COMPANION_RULES}\n\n${persona.system_prompt}\n\n${context}`, history: turns, language: profile.chat_language, userId: auth.user.id, feature: "call_llm", maxTokens: 300 });
+    const raw = await completeText({ system: `${COMPANION_RULES}\n\n${persona.system_prompt}\n\n${context}`, history: turns, language: profile.chat_language, userId: auth.user.id, feature: "call_llm", maxTokens: 800 });
     const reply = raw && unsafeReply(raw) ? SAFE_REPLACEMENT : raw;
     if (!reply) return NextResponse.json({ error: "refused", heard: heard.text, minutes: bill.minutes }, { status: 422 });
 

@@ -56,7 +56,7 @@ async function selftest() {
     }
   };
   const ask = (language: string) => () =>
-    completeText({ system: "You are Tara, a playful 25-year-old surf instructor from Goa. Reply in one short sentence.", history: [{ role: "user", content: "(The call just connected. Greet them warmly.)" }], language, userId: null, feature: "call_llm", maxTokens: 120 });
+    completeText({ system: "You are Tara, a playful 25-year-old surf instructor from Goa. Reply in one short sentence.", history: [{ role: "user", content: "(The call just connected. Greet them warmly.)" }], language, userId: null, feature: "call_llm", maxTokens: 800 });
   await step("reply_english", ask("english"));
   await step("reply_hinglish", ask("hinglish"));
   let audio: Buffer | null = null;

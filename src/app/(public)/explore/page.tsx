@@ -47,7 +47,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: SP }
   filters.gender ??= filterSchema.shape.gender.parse((await cookies()).get(INTEREST_COOKIE)?.value);
   const results = findCompanions(filters);
   const slides: FeaturedSlide[] = [...companions]
-    .sort((a, b) => Number(b.badge === "hot") - Number(a.badge === "hot"))
+    .sort((a, b) => Number(Boolean(b.portrait)) - Number(Boolean(a.portrait)) || Number(b.badge === "hot") - Number(a.badge === "hot"))
     .filter((c) => !filters.gender || c.gender === filters.gender)
     .slice(0, 4)
     .map((c) => ({
