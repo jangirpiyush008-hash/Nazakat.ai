@@ -9,6 +9,8 @@ import { createClient } from "@/lib/supabase/browser";
 import type { ChatEvent, ErrorCode } from "@/app/api/chat/route";
 import { MemoryPanel, type Memory } from "./memory-panel";
 import { MediaSheet } from "./media-sheet";
+import { ProfilePanel, type PanelCompanion } from "./profile-panel";
+import { photosOf } from "@/components/photo-carousel";
 
 export type MediaRef = { id: string; kind: "image" | "video"; url: string | null; duration: number | null };
 type Msg = {
@@ -21,7 +23,7 @@ type Msg = {
   /** In-progress photo/video generation shown as a placeholder bubble. */
   job?: { id: string; kind: "image" | "video"; duration?: number; error?: string };
 };
-type Companion = { id: string; slug: string; name: string; age: number; city: string; occupation: string; hook: string; wash: string };
+type Companion = Omit<PanelCompanion, "photos"> & { id: string; hook: string; portrait?: string; gallery?: string[] };
 
 const errorCopy: Record<ErrorCode | "network", string> = {
   unavailable: "Chat isn't switched on yet. Your message wasn't sent.",
@@ -46,6 +48,8 @@ export function ChatWorkspace(props: {
   videoDurations: VideoDuration[];
   remaining: number;
   dailyLimit: number;
+  /** Open the photo sheet on load (from the quick view's Photo button). */
+  openOnLoad?: "image" | null;
 }) {
   const { companion: c } = props;
   const [messages, setMessages] = useState<Msg[]>(props.initialMessages);
@@ -56,7 +60,7 @@ export function ChatWorkspace(props: {
   const [remaining, setRemaining] = useState(props.remaining);
   const [toast, setToast] = useState<string | null>(null);
   const [panel, setPanel] = useState(false);
-  const [sheet, setSheet] = useState<"image" | "video" | null>(null);
+  const [sheet, setSheet] = useState<"image" | "video" | null>(props.openOnLoad && props.features.image ? props.openOnLoad : null);
   const [sourceMediaId, setSourceMediaId] = useState<string | null>(null);
   const [balance, setBalance] = useState(props.balance);
   const [voiceLoading, setVoiceLoading] = useState<string | null>(null);
@@ -220,6 +224,24 @@ export function ChatWorkspace(props: {
     pollJob(j.id, placeholderId);
   };
 
+  const profilePanel = (
+    <ProfilePanel
+      companion={{ ...c, photos: photosOf(c) }}
+      media={messages.flatMap((m) => (m.media ? [m.media] : []))}
+      conversationId={props.conversationId}
+      features={props.features}
+      onPhoto={() => {
+        setPanel(false);
+        setSheet("image");
+      }}
+      onVideo={() => {
+        setPanel(false);
+        setSheet("video");
+      }}
+      memory={<MemoryPanel companionId={c.id} companionName={c.name} memories={memories} setMemories={setMemories} memoryEnabled={props.memoryEnabled} />}
+    />
+  );
+
   const lastIsUser = messages.length > 0 && messages[messages.length - 1].role === "user";
   const disabled = !props.chatAvailable || remaining <= 0;
 
@@ -245,7 +267,7 @@ export function ChatWorkspace(props: {
           <Link href="/app/chat" aria-label="Back to chats" className="flex size-9 items-center justify-center rounded-full hover:bg-white/10 md:hidden">
             <ArrowLeft className="size-5" />
           </Link>
-          <span className="size-10 flex-none rounded-full shadow-[0_0_0_2px_#FFB423]" style={{ background: c.wash }} />
+          <Avatar c={c} className="size-10 shadow-[0_0_0_2px_#FFB423]" />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <Link href={`/companions/${c.slug}`} className="font-semibold hover:underline">{c.name}</Link>
@@ -259,7 +281,7 @@ export function ChatWorkspace(props: {
             </Link>
           )}
           <button type="button" onClick={() => setPanel(true)} className="glass inline-flex h-9 items-center gap-2 rounded-full px-3 text-xs font-semibold lg:hidden">
-            <Brain className="size-4 text-violet" /> Memory
+            <Brain className="size-4 text-violet" /> Profile
           </button>
         </div>
 
@@ -271,7 +293,7 @@ export function ChatWorkspace(props: {
 
           {messages.length === 0 && (
             <div className="mx-auto mt-10 flex max-w-[360px] flex-col items-center gap-3 text-center">
-              <span className="size-20 rounded-full shadow-[0_0_40px_rgba(255,46,126,.35)]" style={{ background: c.wash }} />
+              <Avatar c={c} className="size-24 shadow-[0_0_40px_rgba(255,46,126,.35)]" />
               <h2 className="font-display text-2xl">{c.name} is waiting</h2>
               <p className="font-display text-[15px] italic text-ink-2">“{c.hook}”</p>
               <div className="mt-2 flex flex-wrap justify-center gap-2">
@@ -461,20 +483,29 @@ export function ChatWorkspace(props: {
         />
       )}
 
-      {/* Memory panel: side column on desktop, sheet on mobile */}
-      <aside className="hidden min-h-0 border-l border-white/[.06] bg-surface lg:block">
-        <MemoryPanel companionId={c.id} companionName={c.name} memories={memories} setMemories={setMemories} memoryEnabled={props.memoryEnabled} />
-      </aside>
+      {/* Character panel: side column on desktop, sheet on mobile */}
+      <aside className="hidden min-h-0 border-l border-white/[.06] bg-surface lg:block">{profilePanel}</aside>
       {panel && (
         <div className="fixed inset-0 z-50 flex items-end bg-bg/70 backdrop-blur-sm lg:hidden" onClick={() => setPanel(false)}>
-          <div role="dialog" aria-modal aria-label="Memory" onClick={(e) => e.stopPropagation()} className="relative max-h-[85dvh] w-full overflow-y-auto rounded-t-3xl bg-surface">
-            <button type="button" onClick={() => setPanel(false)} aria-label="Close" className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-full hover:bg-elevated">
+          <div role="dialog" aria-modal aria-label={`${c.name}'s profile`} onClick={(e) => e.stopPropagation()} className="relative max-h-[88dvh] w-full overflow-y-auto rounded-t-3xl bg-surface">
+            <button type="button" onClick={() => setPanel(false)} aria-label="Close" className="absolute right-4 top-4 z-10 flex size-9 items-center justify-center rounded-full bg-black/50 backdrop-blur-md">
               <X className="size-5" />
             </button>
-            <MemoryPanel companionId={c.id} companionName={c.name} memories={memories} setMemories={setMemories} memoryEnabled={props.memoryEnabled} />
+            {profilePanel}
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+function Avatar({ c, className }: { c: { name: string; wash: string; portrait?: string }; className?: string }) {
+  return (
+    <span className={clsx("relative flex-none overflow-hidden rounded-full", className)} style={{ background: c.wash }}>
+      {c.portrait && (
+        // eslint-disable-next-line @next/next/no-img-element -- small avatar crop of the public portrait
+        <img src={c.portrait} alt="" className="size-full object-cover object-top" />
+      )}
+    </span>
   );
 }

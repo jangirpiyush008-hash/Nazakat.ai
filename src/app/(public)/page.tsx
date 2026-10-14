@@ -7,10 +7,10 @@ import { TrendingHeading } from "@/components/trending-heading";
 import { AiPill, Glow, GlassLink, PrimaryLink, SectionTitle } from "@/components/ui";
 
 const collage = [
-  { slug: "zoya", w: 210, h: 290, left: 0, top: 60, dur: "7s", delay: "0s" },
-  { slug: "meera", w: 230, h: 320, left: 180, top: 0, dur: "8s", delay: "1s" },
-  { slug: "kabir", w: 210, h: 290, left: 400, top: 90, dur: "7.5s", delay: ".5s" },
-  { slug: "anaya", w: 200, h: 270, left: 250, top: 330, dur: "9s", delay: "1.5s" },
+  { slug: "tara", w: 210, h: 290, left: 0, top: 60, dur: "7s", delay: "0s" },
+  { slug: "kiara", w: 230, h: 320, left: 180, top: 0, dur: "8s", delay: "1s" },
+  { slug: "aisha", w: 210, h: 290, left: 400, top: 90, dur: "7.5s", delay: ".5s" },
+  { slug: "alisha", w: 200, h: 270, left: 250, top: 330, dur: "9s", delay: "1.5s" },
 ];
 
 const vibes = [
@@ -38,7 +38,7 @@ const faqs = [
 const yearly = plusOffer("yearly");
 
 export default function HomePage() {
-  const trending = companions.slice(0, 6);
+  const trending = [...companions].sort((a, b) => Number(b.badge === "hot") - Number(a.badge === "hot")).slice(0, 12);
   const bySlug = Object.fromEntries(companions.map((c) => [c.slug, c]));
 
   return (

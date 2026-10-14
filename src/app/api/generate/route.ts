@@ -67,7 +67,8 @@ export async function POST(request: NextRequest) {
   } else if (kind === "video" && companion.portrait_path) {
     sourcePath = { bucket: "portraits", path: companion.portrait_path };
   }
-  const chain = kind === "image" ? falChains.image() : sourcePath ? [...falChains.imageToVideo(), ...falChains.textToVideo()] : falChains.textToVideo();
+  const facePath = kind === "image" ? companion.portrait_path : null;
+  const chain = kind === "image" ? (facePath ? falChains.faceLocked() : falChains.image()) : sourcePath ? [...falChains.imageToVideo(), ...falChains.textToVideo()] : falChains.textToVideo();
   const model = chain[0] ?? "unconfigured";
 
   const { data: job, error: jobError } = await admin
@@ -84,13 +85,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const full = buildMediaPrompt(kind, companion.appearance, companion.name, prompt);
+    const full = buildMediaPrompt(kind, companion.appearance, companion.name, prompt, Boolean(facePath));
+    // Photos: edit the model's main portrait so the face never changes.
+    const referenceImageUrl = facePath ? admin.storage.from("portraits").getPublicUrl(facePath).data.publicUrl : undefined;
     let startImage: string | undefined;
     if (sourcePath) {
       const { data: signed } = await admin.storage.from(sourcePath.bucket).createSignedUrl(sourcePath.path, 900);
       startImage = signed?.signedUrl;
     }
-    const sub = await submitWithFallback(kind, full, { duration: duration ?? undefined, startImageUrl: startImage });
+    const sub = await submitWithFallback(kind, full, { duration: duration ?? undefined, startImageUrl: startImage, referenceImageUrl });
     await admin
       .from("generation_jobs")
       .update({ status: "running", model: sub.model, provider_request_id: sub.requestId, status_url: sub.statusUrl, response_url: sub.responseUrl })

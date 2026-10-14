@@ -8,7 +8,7 @@ import { allVibes, type Companion, type Gender } from "@/lib/companions";
 import { CharacterCard } from "./character-card";
 import { FeaturedCarousel, type FeaturedSlide } from "./featured-carousel";
 
-export type RecentChat = { id: string; slug: string; name: string; wash: string; preview: string; at: string | null };
+export type RecentChat = { id: string; slug: string; name: string; wash: string; portrait?: string; preview: string; at: string | null };
 
 function ago(iso: string | null) {
   if (!iso) return "";
@@ -61,7 +61,10 @@ export function AppHome({ recent, companions, slides, interest }: { recent: Rece
                 href={`/app/chat/${r.id}`}
                 className="flex w-[280px] flex-none snap-start items-center gap-3 rounded-2xl bg-surface p-3 transition-colors hover:bg-elevated"
               >
-                <span className="relative size-14 flex-none rounded-full shadow-[0_0_0_2px_#FF2E7E]" style={{ background: r.wash }} />
+                <span className="relative size-14 flex-none overflow-hidden rounded-full shadow-[0_0_0_2px_#FF2E7E]" style={{ background: r.wash }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- avatar crop of the public portrait */}
+                  {r.portrait && <img src={r.portrait} alt="" className="size-full object-cover object-top" />}
+                </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-baseline justify-between gap-2">
                     <span className="font-semibold">{r.name}</span>

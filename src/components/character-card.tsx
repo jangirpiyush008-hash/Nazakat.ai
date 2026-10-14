@@ -1,9 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import clsx from "clsx";
 import type { Companion } from "@/lib/companions";
 import { languageLabels } from "@/lib/companions";
 import { AiPill } from "./ui";
+import { useQuickView } from "./companion-quickview";
 
 /** Portrait frame: commissioned art when present, otherwise the lighting wash. */
 export function Portrait({ companion, sizes, priority }: { companion: Companion; sizes: string; priority?: boolean }) {
@@ -37,9 +40,16 @@ export function CharacterCard({
   className?: string;
 }) {
   const c = companion;
+  const quickView = useQuickView();
   return (
     <Link
       href={href ?? `/companions/${c.slug}`}
+      onClick={(e) => {
+        // Plain click opens the quick view; cmd/ctrl-click still opens the page.
+        if (!quickView || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+        e.preventDefault();
+        quickView(c);
+      }}
       className={clsx(
         "group relative block aspect-[3/4] overflow-hidden rounded-[20px] transition-all duration-200 ease-out",
         "hover:-translate-y-1.5 hover:shadow-[0_0_0_2px_#FF2E7E,0_20px_60px_rgba(255,46,126,.3)]",

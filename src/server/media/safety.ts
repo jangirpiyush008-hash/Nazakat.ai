@@ -37,11 +37,15 @@ export async function checkPrompt(prompt: string, userId: string | null = null):
 }
 
 /** Wraps the user's idea with the character's look and the non-negotiable guardrails. */
-export function buildMediaPrompt(kind: "image" | "video", appearance: string | null, name: string, userPrompt: string) {
-  const subject = appearance ? `${name}, ${appearance}` : `${name}, an adult Indian person in their late twenties`;
+export function buildMediaPrompt(kind: "image" | "video", appearance: string | null, name: string, userPrompt: string, faceLocked = false) {
+  const subject = faceLocked
+    ? `Keep the exact same person from the reference photo: identical face, facial features, skin tone, hair and body (${name})`
+    : appearance
+      ? `${name}, ${appearance}`
+      : `${name}, an adult Indian person in their late twenties`;
   const style =
     kind === "image"
-      ? "cinematic photo, shallow depth of field, warm rim light, high detail, tasteful, adult, fully clothed or swimwear/lingerie at most, no nudity"
+      ? "photorealistic photo, natural skin texture, shallow depth of field, warm rim light, high detail, tasteful, adult, fully clothed or swimwear/lingerie at most, no nudity"
       : "cinematic vertical video, smooth natural motion, warm lighting, tasteful, adult, fully clothed or swimwear/lingerie at most, no nudity";
   return `${subject}. ${userPrompt.trim()}. ${style}.`;
 }

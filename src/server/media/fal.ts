@@ -11,7 +11,7 @@ const QUEUE = "https://queue.fal.run";
 type ModelSpec = {
   /** Lengths in seconds this model can produce (videos only). */
   durations?: readonly number[];
-  build: (prompt: string, opts: { duration?: number; startImageUrl?: string }) => Record<string, unknown>;
+  build: (prompt: string, opts: { duration?: number; startImageUrl?: string; referenceImageUrl?: string }) => Record<string, unknown>;
 };
 
 const NEGATIVE = "nudity, explicit, minor, child, blur, distort, low quality";
@@ -24,6 +24,10 @@ const flux: ModelSpec = {
 export const modelSpecs: Record<string, ModelSpec> = {
   "fal-ai/flux/dev": flux,
   "fal-ai/flux/schnell": flux,
+  /** Edits the model's main portrait, so the face stays the same in every new photo. */
+  "fal-ai/flux-pro/kontext": {
+    build: (prompt, { referenceImageUrl }) => ({ prompt, image_url: referenceImageUrl, aspect_ratio: "3:4", num_images: 1, output_format: "jpeg", safety_tolerance: "2" }),
+  },
   "fal-ai/kling-video/v3/pro/text-to-video": {
     durations: [5, 8, 10, 15],
     build: (prompt, { duration }) => ({ prompt, duration: String(duration ?? 5), aspect_ratio: "9:16", negative_prompt: NEGATIVE, generate_audio: true, enable_safety_checker: true }),
@@ -42,6 +46,8 @@ const list = (raw: string | undefined, fallback: string) => (raw || fallback).sp
 
 export const falChains = {
   image: () => list(process.env.FAL_IMAGE_MODELS, "fal-ai/flux/dev,fal-ai/flux/schnell"),
+  /** Used when the model has a main portrait (locked face). */
+  faceLocked: () => list(process.env.FAL_FACE_MODELS, "fal-ai/flux-pro/kontext"),
   textToVideo: () => list(process.env.FAL_VIDEO_MODELS, "fal-ai/kling-video/v3/pro/text-to-video,fal-ai/bytedance/seedance/v1/pro/text-to-video"),
   imageToVideo: () => list(process.env.FAL_I2V_MODELS, "fal-ai/kling-video/v3/pro/image-to-video"),
 };
@@ -68,14 +74,15 @@ async function submitOne(model: string, input: Record<string, unknown>): Promise
 }
 
 /** Tries each model in the chain that supports the request; returns the first accepted submission. */
-export async function submitWithFallback(kind: "image" | "video", prompt: string, opts: { duration?: number; startImageUrl?: string } = {}) {
-  const chain = kind === "image" ? falChains.image() : opts.startImageUrl ? [...falChains.imageToVideo(), ...falChains.textToVideo()] : falChains.textToVideo();
+export async function submitWithFallback(kind: "image" | "video", prompt: string, opts: { duration?: number; startImageUrl?: string; referenceImageUrl?: string } = {}) {
+  // With a face reference we never fall back to text-only models: the face must stay locked.
+  const chain = kind === "image" ? (opts.referenceImageUrl ? falChains.faceLocked() : falChains.image()) : opts.startImageUrl ? [...falChains.imageToVideo(), ...falChains.textToVideo()] : falChains.textToVideo();
   const eligible = chain.filter((m) => kind === "image" || !opts.duration || modelSpecs[m].durations?.includes(opts.duration));
   let lastError: unknown = new Error(`no ${kind} model supports this request`);
   for (const model of eligible) {
     try {
       const isI2V = model.includes("image-to-video");
-      return await submitOne(model, modelSpecs[model].build(prompt, { duration: opts.duration, startImageUrl: isI2V ? opts.startImageUrl : undefined }));
+      return await submitOne(model, modelSpecs[model].build(prompt, { duration: opts.duration, startImageUrl: isI2V ? opts.startImageUrl : undefined, referenceImageUrl: opts.referenceImageUrl }));
     } catch (err) {
       lastError = err;
       console.error("fal_submit_failed", model, (err as Error).message);

@@ -5,11 +5,14 @@ import { availableDurations } from "@/server/media/fal";
 import type { VideoDuration } from "@/config/pricing";
 import { requireOnboarded } from "@/server/session";
 import { ChatWorkspace, type MediaRef } from "@/components/chat/chat-workspace";
+import { getCompanion } from "@/lib/companions";
 
 type Params = Promise<{ id: string }>;
+type Search = Promise<{ open?: string }>;
 
-export default async function ChatPage({ params }: { params: Params }) {
+export default async function ChatPage({ params, searchParams }: { params: Params; searchParams: Search }) {
   const { id } = await params;
+  const { open } = await searchParams;
   const { supabase, user, profile } = await requireOnboarded(`/app/chat/${id}`);
   const { data: convo } = await supabase.from("conversations").select("id, companion_id").eq("id", id).maybeSingle();
   if (!convo) notFound();
@@ -38,7 +41,8 @@ export default async function ChatPage({ params }: { params: Params }) {
   return (
     <ChatWorkspace
       conversationId={id}
-      companion={companion}
+      companion={withCatalogue(companion)}
+      openOnLoad={open === "photo" ? "image" : null}
       initialMessages={(messages ?? [])
         .filter((m) => m.role !== "system")
         .map((m) => ({ id: m.id, role: m.role as "user" | "assistant", content: m.content, feedback: m.feedback, media: m.media_id ? (media.get(m.media_id) ?? null) : null }))}
@@ -52,4 +56,10 @@ export default async function ChatPage({ params }: { params: Params }) {
       dailyLimit={FREE_DAILY_MESSAGES}
     />
   );
+}
+
+/** Adds the public catalogue details (photos, bio, model ID) to the DB row. */
+function withCatalogue<T extends { slug: string }>(row: T) {
+  const c = getCompanion(row.slug);
+  return { ...row, portrait: c?.portrait, gallery: c?.gallery, bio: c?.bio, traits: c?.traits, interests: c?.interests, modelId: c?.modelId };
 }

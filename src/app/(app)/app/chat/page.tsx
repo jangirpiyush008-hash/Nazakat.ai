@@ -28,7 +28,7 @@ export default async function ChatsPage() {
     const c = bySlug.get(slugById.get(cv.companion_id) ?? "");
     if (!c) return [];
     const last = latest.get(cv.id);
-    return [{ id: cv.id, slug: c.slug, name: c.name, wash: c.wash, preview: last ? `${last.role === "user" ? "You: " : ""}${last.content}` : c.hook, at: cv.last_message_at }];
+    return [{ id: cv.id, slug: c.slug, name: c.name, wash: c.wash, portrait: c.portrait, preview: last ? `${last.role === "user" ? "You: " : ""}${last.content}` : c.hook, at: cv.last_message_at }];
   });
 
   const companions = catalogue.filter((c) => published.has(c.slug));
@@ -39,6 +39,7 @@ export default async function ChatsPage() {
     age: c.age,
     quote: c.quote,
     wash: c.wash,
+    portrait: c.portrait,
     meta: `${c.occupation} · ${c.city} · ${languageLabels[c.languages[0]].label} · AI character`,
   }));
 

@@ -18,6 +18,7 @@ const MAX_AUDIO_BYTES = 2_000_000;
 /**
  * One spoken turn: bill elapsed minutes → speech-to-text → companion reply →
  * text-to-speech. Audio and transcripts are not stored.
+ * With greet=1 (no audio) the companion answers the call and speaks first.
  */
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -31,8 +32,9 @@ export async function POST(request: NextRequest) {
   const form = await request.formData().catch(() => null);
   const callId = form?.get("callId");
   const audio = form?.get("audio");
+  const greet = form?.get("greet") === "1";
   const prior = history.safeParse(JSON.parse(String(form?.get("history") ?? "[]")));
-  if (typeof callId !== "string" || !(audio instanceof Blob) || audio.size > MAX_AUDIO_BYTES || !prior.success) {
+  if (typeof callId !== "string" || (!greet && !(audio instanceof Blob)) || (audio instanceof Blob && audio.size > MAX_AUDIO_BYTES) || !prior.success) {
     return NextResponse.json({ error: "invalid" }, { status: 400 });
   }
 
@@ -53,11 +55,15 @@ export async function POST(request: NextRequest) {
   if (!companion || !persona || !profile) return NextResponse.json({ error: "unavailable" }, { status: 503 });
 
   try {
-    const filename = audio.type.includes("ogg") ? "turn.ogg" : audio.type.includes("mp4") ? "turn.m4a" : "turn.webm";
-    const heard = await transcribe(audio, filename, auth.user.id);
-    if (!heard.text) return NextResponse.json({ empty: true, minutes: bill.minutes });
+    let heard = { text: "" };
+    if (audio instanceof Blob) {
+      const filename = audio.type.includes("ogg") ? "turn.ogg" : audio.type.includes("mp4") ? "turn.m4a" : "turn.webm";
+      heard = await transcribe(audio, filename, auth.user.id);
+      if (!heard.text) return NextResponse.json({ empty: true, minutes: bill.minutes });
+    }
 
-    const turns: Turn[] = [...prior.data, { role: "user", content: heard.text }];
+    const opener = `(The call just connected. You picked up. Greet ${profile.display_name || "them"} warmly and playfully in one short sentence, in character.)`;
+    const turns: Turn[] = greet ? [{ role: "user", content: opener }] : [...prior.data, { role: "user", content: heard.text }];
     while (turns.length && turns[0].role !== "user") turns.shift();
     const context =
       contextMessage({ language: profile.chat_language, memories: profile.memory_enabled ? (memories ?? []).map((m) => m.fact) : [], displayName: profile.display_name }) +

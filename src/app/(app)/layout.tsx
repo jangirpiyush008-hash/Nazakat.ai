@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { QuickViewProvider } from "@/components/companion-quickview";
 import Link from "next/link";
 import { Compass, Images, MessageCircle, Settings } from "lucide-react";
 import { brand } from "@/config/brand";
@@ -37,7 +38,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           )}
         </div>
       </header>
-      <div className="pb-20 md:pb-0">{children}</div>
+      <div className="pb-20 md:pb-0">
+        <QuickViewProvider>{children}</QuickViewProvider>
+      </div>
       <nav aria-label="App" className="fixed inset-x-0 bottom-0 z-40 flex border-t border-white/[.07] bg-bg/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-[20px] md:hidden">
         {[
           ["/app/chat", "Chats", <MessageCircle key="c" className="size-5" aria-hidden />],

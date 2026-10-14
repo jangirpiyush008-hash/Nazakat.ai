@@ -2,12 +2,18 @@ import { NextResponse, type NextRequest } from "next/server";
 import { publicOrigin } from "@/lib/public-origin";
 import { createClient } from "@/lib/supabase/server";
 
-/** Opens (or reuses) the conversation with a companion: /app/chat/new?c=<slug>. */
+/**
+ * Opens (or reuses) the conversation with a companion: /app/chat/new?c=<slug>.
+ * Optional &then=call opens the call screen, &then=photo opens the photo sheet.
+ */
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const origin = publicOrigin(request);
   const slug = searchParams.get("c") ?? "";
-  const here = `/app/chat/new?c=${encodeURIComponent(slug)}`;
+  const then = searchParams.get("then");
+  const here = `/app/chat/new?c=${encodeURIComponent(slug)}${then ? `&then=${encodeURIComponent(then)}` : ""}`;
+  const go = (id: string) =>
+    NextResponse.redirect(then === "call" ? `${origin}/app/call/${id}` : then === "photo" ? `${origin}/app/chat/${id}?open=photo` : `${origin}/app/chat/${id}`);
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return NextResponse.redirect(`${origin}/explore?auth=signup&next=${encodeURIComponent(here)}`);
@@ -25,7 +31,7 @@ export async function GET(request: NextRequest) {
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (existing) return NextResponse.redirect(`${origin}/app/chat/${existing.id}`);
+  if (existing) return go(existing.id);
 
   const { data: created, error } = await supabase
     .from("conversations")
@@ -33,5 +39,5 @@ export async function GET(request: NextRequest) {
     .select("id")
     .single();
   if (error || !created) return NextResponse.redirect(`${origin}/explore`);
-  return NextResponse.redirect(`${origin}/app/chat/${created.id}`);
+  return go(created.id);
 }

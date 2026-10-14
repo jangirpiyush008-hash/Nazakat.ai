@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import clsx from "clsx";
@@ -12,6 +13,7 @@ export type FeaturedSlide = {
   quote: string;
   meta: string;
   wash: string;
+  portrait?: string;
 };
 
 const INTERVAL = 6000;
@@ -49,7 +51,11 @@ export function FeaturedCarousel({ slides, hrefFor = (slug: string) => `/compani
           className={clsx("absolute inset-0 transition-opacity duration-500", n === i ? "opacity-100" : "pointer-events-none opacity-0")}
         >
           <div className="absolute inset-y-0 right-0 w-full md:w-[60%]" style={{ background: s.wash }}>
-            <span className="absolute inset-x-0 top-1/2 text-center font-mono text-[11px] text-ink-3/70">portrait · {s.name}</span>
+            {s.portrait ? (
+              <Image src={s.portrait} alt={`${s.name}, AI character`} fill sizes="(max-width: 768px) 100vw, 60vw" className="object-cover object-[50%_25%]" priority={n === 0} />
+            ) : (
+              <span className="absolute inset-x-0 top-1/2 text-center font-mono text-[11px] text-ink-3/70">portrait · {s.name}</span>
+            )}
           </div>
           <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(10,7,9,.95)_35%,transparent_80%)] md:bg-[linear-gradient(90deg,rgba(10,7,9,.92)_32%,transparent_68%)]" />
           <div className="absolute inset-x-6 bottom-12 flex max-w-[460px] flex-col gap-3 md:inset-y-0 md:left-12 md:justify-center">

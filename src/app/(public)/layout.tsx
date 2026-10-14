@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { QuickViewProvider } from "@/components/companion-quickview";
 import { getCapabilities } from "@/config/features";
 import { AgeGate } from "@/components/age-gate";
 import { AuthModal } from "@/components/auth-modal";
@@ -15,7 +16,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
         <Sidebar />
         <div className="min-w-0">
-          {children}
+          <QuickViewProvider>{children}</QuickViewProvider>
           <SiteFooter />
         </div>
       </div>

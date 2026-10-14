@@ -46,7 +46,8 @@ export default async function ExplorePage({ searchParams }: { searchParams: SP }
   // No explicit category: fall back to the age-gate "interested in" choice.
   filters.gender ??= filterSchema.shape.gender.parse((await cookies()).get(INTEREST_COOKIE)?.value);
   const results = findCompanions(filters);
-  const slides: FeaturedSlide[] = companions
+  const slides: FeaturedSlide[] = [...companions]
+    .sort((a, b) => Number(b.badge === "hot") - Number(a.badge === "hot"))
     .filter((c) => !filters.gender || filters.gender === "anime" || c.gender === filters.gender)
     .slice(0, 4)
     .map((c) => ({
@@ -55,6 +56,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: SP }
       age: c.age,
       quote: c.quote,
       wash: c.wash,
+      portrait: c.portrait,
       meta: `${c.occupation} · ${c.city} · ${languageLabels[c.languages[0]].label} · AI character`,
     }));
   const hasFilters = Boolean(filters.language || filters.vibe || filters.interest || filters.q);
