@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { brand } from "@/config/brand";
+import { Wordmark } from "./wordmark";
 import { AGE_COOKIE, INTEREST_COOKIE, readCookie, setPrefCookie } from "@/lib/prefs";
 
 const options = [
@@ -44,9 +44,8 @@ export function AgeGate() {
       <div className="relative w-full max-w-[440px] overflow-hidden rounded-3xl border border-white/10 bg-surface p-6 text-center shadow-card md:p-8">
         <div aria-hidden className="pointer-events-none absolute -top-40 left-1/2 size-80 -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,46,126,.4),transparent_70%)] blur-2xl" />
         <div className="relative flex flex-col gap-5">
-          <div className="font-display text-2xl">
-            {brand.name}
-            <span className="text-rani">.</span>
+          <div className="flex justify-center">
+            <Wordmark size="lg" />
           </div>
           <div>
             <h2 id="age-title" className="font-display text-[32px] font-light leading-tight">

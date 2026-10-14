@@ -3,6 +3,7 @@ import { brand } from "@/config/brand";
 import { formatINR, plusOffer, weeklyPass } from "@/config/pricing";
 import { companions } from "@/lib/companions";
 import { CharacterCard, Portrait } from "@/components/character-card";
+import { TrendingHeading } from "@/components/trending-heading";
 import { AiPill, Glow, GlassLink, PrimaryLink, SectionTitle } from "@/components/ui";
 
 const collage = [
@@ -115,10 +116,7 @@ export default function HomePage() {
         {/* Trending */}
         <section className="flex flex-col gap-3 pb-6 md:gap-5 md:px-8 md:pb-[72px] lg:px-12 2xl:px-16">
           <div className="flex items-baseline justify-between px-5 md:px-0">
-            <SectionTitle className="max-md:text-[22px]">
-              Trending <span className="max-md:hidden">tonight in India</span>
-              <span className="md:hidden">tonight</span> <span className="text-sindoor">🔥</span>
-            </SectionTitle>
+            <TrendingHeading />
             <Link href="/explore" className="text-xs font-semibold text-rani md:text-sm">
               <span className="md:hidden">All</span>
               <span className="max-md:hidden">See all →</span>

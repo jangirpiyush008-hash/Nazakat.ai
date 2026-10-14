@@ -4,12 +4,12 @@ import clsx from "clsx";
 import { brand, disclosureLines } from "@/config/brand";
 import { GenderToggle, GenderToggleFallback } from "./shell/gender-toggle";
 import { HeaderAuth } from "./shell/header-auth";
+import { Wordmark } from "./wordmark";
 
-export function Logo({ className }: { className?: string }) {
+export function Logo({ tone = "dark", className }: { tone?: "dark" | "light"; className?: string }) {
   return (
-    <Link href="/" className={clsx("font-display text-2xl tracking-[.01em] text-ink md:text-[26px]", className)} aria-label={`${brand.name} home`}>
-      {brand.name}
-      <span className="text-rani">.</span>
+    <Link href="/" className={clsx("inline-flex", className)} aria-label={`${brand.name} home`}>
+      <Wordmark tone={tone} />
     </Link>
   );
 }
@@ -70,10 +70,7 @@ export function SiteFooter() {
     <footer className="relative bg-surface pb-20 md:pb-0">
       <div className="grid gap-8 px-5 py-8 text-[13px] text-ink-2 md:grid-cols-[1.4fr_1fr_1fr_1fr] md:px-8 md:pb-12 lg:px-16 md:pt-10">
         <div className="flex flex-col gap-3">
-          <span className="font-display text-[22px] text-ink">
-            {brand.name}
-            <span className="text-rani">.</span>
-          </span>
+          <Wordmark size="sm" />
           <p className="text-[11px] font-semibold uppercase leading-[1.8] tracking-[.14em] text-ink-3">
             {disclosureLines.map((l) => (
               <span key={l} className="block">{l}</span>

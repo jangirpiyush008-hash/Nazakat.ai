@@ -27,7 +27,7 @@ export default async function LegalPageView({ params }: { params: Params }) {
     <div className="bg-l-bg text-l-text [color-scheme:light]">
       <header className="border-b border-l-divider bg-white">
         <div className="mx-auto flex max-w-[1200px] items-center justify-between px-5 py-4 md:px-16">
-          <Logo className="!text-l-text" />
+          <Logo tone="light" />
           <Link href="/help" className="text-sm text-l-text-2 hover:text-l-primary">Help centre</Link>
         </div>
       </header>

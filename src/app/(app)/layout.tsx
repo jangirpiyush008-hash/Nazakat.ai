@@ -4,6 +4,7 @@ import { Compass, MessageCircle, Settings } from "lucide-react";
 import { brand } from "@/config/brand";
 import { getUser } from "@/lib/supabase/server";
 import { DiscreetGuard } from "@/components/discreet-guard";
+import { Wordmark } from "@/components/wordmark";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
@@ -20,9 +21,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <DiscreetGuard enabled={discreet}>
       <header className="sticky top-0 z-40 border-b border-white/[.07] bg-bg/80 backdrop-blur-[20px]">
         <div className="flex h-14 items-center justify-between gap-4 px-4 md:h-16 md:px-8">
-          <Link href="/app/chat" className="font-display text-2xl">
-            {discreet ? "Notes" : brand.name}
-            <span className="text-rani">.</span>
+          <Link href="/app/chat" aria-label={discreet ? "Notes" : `${brand.name} chats`}>
+            {discreet ? <span className="font-ui text-xl font-semibold">Notes</span> : <Wordmark />}
           </Link>
           <nav aria-label="App" className="hidden items-center gap-6 text-sm text-ink-2 md:flex">
             <Link href="/app/chat" className="hover:text-ink">Chats</Link>

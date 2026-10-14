@@ -4,6 +4,8 @@
  */
 export const brand = {
   name: "Nazakat",
+  /** Logo option 8: light-weight first half, bold pink second half, marigold dot. */
+  wordmark: ["naza", "kat"] as const,
   domainLabel: "Nazakat.ai",
   creditName: "Sparks",
   creditGlyph: "✦",
