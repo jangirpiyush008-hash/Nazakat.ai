@@ -1,6 +1,8 @@
 // Generates each model's locked face and photo set.
-//   1. main.jpg — the face reference (FLUX dev, fixed seed per model ID)
-//   2. 1..3.jpg — the SAME face in new outfits/scenes (FLUX Kontext edits of main.jpg)
+//   1. main.jpg — the face reference (SpicyAPI Seedream 5.0 Pro text-to-image)
+//   2. 1..3.jpg — the SAME face in new outfits/scenes (Seedream 5.0 Pro edits of main.jpg)
+// SpicyAPI calls go through the live server's /api/admin/spicy (its key never
+// leaves Railway), or straight to SpicyAPI when SPICYAPI_API_KEY is set locally.
 // Every photo passes Claude Haiku's image check before it is uploaded to the
 // public "portraits" bucket. Writes src/lib/portraits.json and companions.portrait_path.
 //
@@ -11,14 +13,15 @@ import { companions, type Companion } from "../src/lib/companions.ts";
 
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const FAL = process.env.FAL_KEY!;
+const SPICY = process.env.SPICYAPI_API_KEY;
+const SERVER = process.env.PORTRAIT_API_BASE || "https://nazakatai-production.up.railway.app";
 const CHECK_KEY = process.env.AI_CHAT_API_KEY!;
-for (const [k, v] of Object.entries({ NEXT_PUBLIC_SUPABASE_URL: SUPABASE, SUPABASE_SERVICE_ROLE_KEY: SERVICE, FAL_KEY: FAL, AI_CHAT_API_KEY: CHECK_KEY })) {
+for (const [k, v] of Object.entries({ NEXT_PUBLIC_SUPABASE_URL: SUPABASE, SUPABASE_SERVICE_ROLE_KEY: SERVICE, AI_CHAT_API_KEY: CHECK_KEY })) {
   if (!v) throw new Error(`Set ${k} in .env.local`);
 }
 
-const BASE_MODEL = process.env.PORTRAIT_BASE_MODEL || "fal-ai/flux/dev";
-const FACE_MODEL = process.env.FAL_FACE_MODELS?.split(",")[0]?.trim() || "fal-ai/flux-pro/kontext";
+const BASE_MODEL = process.env.SPICY_IMAGE_MODEL || "bytedance/seedream-5.0-pro/text-to-image";
+const FACE_MODEL = process.env.SPICY_FACE_MODEL || "bytedance/seedream-5.0-pro/edit";
 const BUCKET = "portraits";
 const MANIFEST = new URL("../src/lib/portraits.json", import.meta.url);
 const REVIEW_DIR = process.env.PORTRAIT_REVIEW_DIR || "portraits-review";
@@ -90,21 +93,43 @@ const looksFor = (c: Companion, i: number) => {
 };
 const seedFor = (c: Companion) => Number(c.modelId.replace(/\D/g, "")) * 7919;
 
-// ---------- fal queue ----------
-async function fal(model: string, input: Record<string, unknown>): Promise<{ url: string; nsfw: boolean }> {
-  const h = { Authorization: `Key ${FAL}`, "Content-Type": "application/json" };
-  const sub = await fetch(`https://queue.fal.run/${model}`, { method: "POST", headers: h, body: JSON.stringify(input) });
-  if (!sub.ok) throw new Error(`fal submit ${model} ${sub.status}: ${(await sub.text()).slice(0, 200)}`);
-  const { status_url, response_url } = (await sub.json()) as { status_url: string; response_url: string };
-  for (let t = 0; t < 120; t++) {
-    await new Promise((r) => setTimeout(r, 2000));
-    const st = (await (await fetch(status_url, { headers: h })).json()) as { status: string; error?: string };
-    if (st.error) throw new Error(`fal ${model}: ${st.error}`);
-    if (st.status === "COMPLETED") break;
+// ---------- SpicyAPI tasks ----------
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- loose JSON from the API
+type Json = Record<string, any>;
+async function spicy(action: Record<string, unknown>) {
+  if (SPICY) {
+    const h = { Authorization: `Bearer ${SPICY}`, "Content-Type": "application/json" };
+    const api = "https://api.spicyapi.ai/api/v1";
+    const res =
+      action.action === "create"
+        ? await fetch(`${api}/jobs/createTask`, { method: "POST", headers: { ...h, "Idempotency-Key": String(action.idempotencyKey) }, body: JSON.stringify({ model: action.model, input: action.input }) })
+        : await fetch(`${api}/jobs/recordInfo?taskId=${action.taskId}`, { headers: h });
+    const j = (await res.json()) as { code: number; msg: string; data: Json };
+    if (j.code !== 200) throw new Error(`spicy ${j.code} ${j.msg}`);
+    if (action.action === "create") return { taskId: j.data.taskId };
+    const st = j.data.state;
+    if (st === "queued" || st === "running") return { state: "running" };
+    const url = j.data.output?.assets?.find((x: { url?: string }) => x.url)?.url;
+    return st === "succeeded" && url ? { state: "succeeded", url } : { state: "failed", code: j.data.errorCode || st };
   }
-  const r = (await (await fetch(response_url, { headers: h })).json()) as { images?: { url: string }[]; has_nsfw_concepts?: boolean[] };
-  if (!r.images?.[0]) throw new Error(`fal ${model}: no image`);
-  return { url: r.images[0].url, nsfw: Boolean(r.has_nsfw_concepts?.some(Boolean)) };
+  const res = await fetch(`${SERVER}/api/admin/spicy`, { method: "POST", headers: { Authorization: `Bearer ${SERVICE}`, "Content-Type": "application/json" }, body: JSON.stringify(action) });
+  const j = (await res.json().catch(() => ({}))) as Json;
+  if (!res.ok) throw new Error(`server ${res.status} ${j.error ?? ""}`);
+  return j;
+}
+
+async function generate(model: string, input: Record<string, unknown>): Promise<{ url: string; nsfw: boolean }> {
+  const { taskId } = await spicy({ action: "create", model, input, idempotencyKey: crypto.randomUUID() });
+  for (let wait = 3000, t = 0; t < 80; t++, wait = Math.min(wait * 1.4, 10000)) {
+    await new Promise((r) => setTimeout(r, wait));
+    const st = await spicy({ action: "status", taskId });
+    if (st.state === "succeeded") return { url: st.url, nsfw: false };
+    if (st.state === "failed") {
+      if (/moderat|safety|content|refus/i.test(st.code)) return { url: "", nsfw: true };
+      throw new Error(`${model}: ${st.code}`);
+    }
+  }
+  throw new Error(`${model}: timed out`);
 }
 
 // ---------- Claude Haiku image check (same rules as src/server/media/image-check.ts) ----------
@@ -191,7 +216,7 @@ async function run(c: Companion, i: number) {
   let mainPath = `${c.slug}/main.jpg`;
   if (!extrasOnly || !manifest[c.slug]) {
     const url = await safeImage(`${c.slug}/main`, (s) =>
-      fal(BASE_MODEL, { prompt: mainPrompt(c), image_size: "portrait_4_3", num_inference_steps: 32, guidance_scale: 3.5, seed: s, num_images: 1, enable_safety_checker: true, output_format: "jpeg" }), seed);
+      generate(BASE_MODEL, { prompt: mainPrompt(c) + (s === seed ? "" : ` Variation ${s}.`), aspect_ratio: "3:4", resolution: "2k", output_format: "jpeg" }), seed);
     mainPath = await store(c.slug, "main", url);
   }
 
@@ -200,7 +225,7 @@ async function run(c: Companion, i: number) {
   const gallery: string[] = [];
   for (const [k, look] of looksFor(c, i).entries()) {
     const url = await safeImage(`${c.slug}/${k + 1}`, (s) =>
-      fal(FACE_MODEL, { prompt: lookPrompt(c, look), image_url: reference, aspect_ratio: "3:4", guidance_scale: 3.5, seed: s, num_images: 1, output_format: "jpeg", safety_tolerance: "2" }), seed + k + 1);
+      generate(FACE_MODEL, { prompt: lookPrompt(c, look), image_urls: [reference], aspect_ratio: "3:4", resolution: "2k", output_format: "jpeg" }), seed + k + 1);
     gallery.push(`${publicUrl(await store(c.slug, String(k + 1), url))}?v=${version}`);
   }
 

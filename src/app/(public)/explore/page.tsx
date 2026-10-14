@@ -48,7 +48,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: SP }
   const results = findCompanions(filters);
   const slides: FeaturedSlide[] = [...companions]
     .sort((a, b) => Number(b.badge === "hot") - Number(a.badge === "hot"))
-    .filter((c) => !filters.gender || filters.gender === "anime" || c.gender === filters.gender)
+    .filter((c) => !filters.gender || c.gender === filters.gender)
     .slice(0, 4)
     .map((c) => ({
       slug: c.slug,

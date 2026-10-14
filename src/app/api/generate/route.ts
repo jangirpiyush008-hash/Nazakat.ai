@@ -4,7 +4,9 @@ import { getCapabilities } from "@/config/features";
 import { sparkCosts, videoDurations } from "@/config/pricing";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { availableDurations, falChains, submitWithFallback } from "@/server/media/fal";
+import { falChains, submitWithFallback } from "@/server/media/fal";
+import { mediaDurations, providerFor } from "@/server/media/provider";
+import { spicyCreate, spicyInput, spicyModels } from "@/server/media/spicy";
 import { buildMediaPrompt, checkPrompt } from "@/server/media/safety";
 import { rateLimit, tooMany } from "@/server/rate-limit";
 import { chargeSparks, refundSparks } from "@/server/sparks";
@@ -43,7 +45,8 @@ export async function POST(request: NextRequest) {
 
   const caps = getCapabilities();
   const admin = createAdminClient();
-  if (!admin || caps[kind] !== "available") return fail(503, "unavailable");
+  const provider = providerFor(kind);
+  if (!admin || caps[kind] !== "available" || !provider) return fail(503, "unavailable");
 
   const { data: convo } = await supabase.from("conversations").select("id, companion_id").eq("id", conversationId).maybeSingle();
   if (!convo) return fail(404, "not_found");
@@ -53,7 +56,7 @@ export async function POST(request: NextRequest) {
   ]);
   if (!profile?.onboarded_at || !companion) return fail(403, "unauthorized");
 
-  if (duration && !availableDurations().includes(duration)) return fail(400, "duration_unavailable");
+  if (duration && !mediaDurations().includes(duration)) return fail(400, "duration_unavailable");
   const verdict = await checkPrompt(prompt, user.id);
   if (!verdict.ok) return NextResponse.json({ error: "blocked", reason: verdict.reason }, { status: 422 });
 
@@ -69,11 +72,16 @@ export async function POST(request: NextRequest) {
   }
   const facePath = kind === "image" ? companion.portrait_path : null;
   const chain = kind === "image" ? (facePath ? falChains.faceLocked() : falChains.image()) : sourcePath ? [...falChains.imageToVideo(), ...falChains.textToVideo()] : falChains.textToVideo();
-  const model = chain[0] ?? "unconfigured";
+  const model =
+    provider === "spicy"
+      ? kind === "image"
+        ? facePath ? spicyModels.faceEdit() : spicyModels.textToImage()
+        : sourcePath ? spicyModels.imageToVideo() : spicyModels.textToVideo()
+      : (chain[0] ?? "unconfigured");
 
   const { data: job, error: jobError } = await admin
     .from("generation_jobs")
-    .insert({ user_id: user.id, companion_id: companion.id, conversation_id: convo.id, kind, prompt, duration_s: duration, sparks_cost: cost, provider: "fal", model })
+    .insert({ user_id: user.id, companion_id: companion.id, conversation_id: convo.id, kind, prompt, duration_s: duration, sparks_cost: cost, provider, model })
     .select("id")
     .single();
   if (jobError || !job) return fail(500, "failed");
@@ -93,11 +101,22 @@ export async function POST(request: NextRequest) {
       const { data: signed } = await admin.storage.from(sourcePath.bucket).createSignedUrl(sourcePath.path, 900);
       startImage = signed?.signedUrl;
     }
-    const sub = await submitWithFallback(kind, full, { duration: duration ?? undefined, startImageUrl: startImage, referenceImageUrl });
-    await admin
-      .from("generation_jobs")
-      .update({ status: "running", model: sub.model, provider_request_id: sub.requestId, status_url: sub.statusUrl, response_url: sub.responseUrl })
-      .eq("id", job.id);
+    if (provider === "spicy") {
+      const input =
+        kind === "image"
+          ? referenceImageUrl ? spicyInput.faceEdit(full, referenceImageUrl) : spicyInput.image(full)
+          : startImage ? spicyInput.imageToVideo(full, startImage, duration ?? 5) : spicyInput.textToVideo(full, duration ?? 5);
+      // The job id doubles as the idempotency key, so a retry never pays twice.
+      const { taskId } = await spicyCreate(model, input, job.id);
+      const ref = `spicy:${taskId}`;
+      await admin.from("generation_jobs").update({ status: "running", provider_request_id: taskId, status_url: ref, response_url: ref }).eq("id", job.id);
+    } else {
+      const sub = await submitWithFallback(kind, full, { duration: duration ?? undefined, startImageUrl: startImage, referenceImageUrl });
+      await admin
+        .from("generation_jobs")
+        .update({ status: "running", model: sub.model, provider_request_id: sub.requestId, status_url: sub.statusUrl, response_url: sub.responseUrl })
+        .eq("id", job.id);
+    }
   } catch (err) {
     console.error("generate_submit_error", (err as Error).message);
     await refundSparks(admin, user.id, cost, `refund-${job.id}`, `${kind}:${job.id}`);

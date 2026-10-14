@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { checkImage, providerHasOwnSafetyChecker } from "@/server/media/image-check";
 import { result, status, type ImageResult, type VideoResult } from "@/server/media/fal";
+import { spicyStatus } from "@/server/media/spicy";
 import { unitCosts } from "@/config/costs";
 import { refundSparks } from "@/server/sparks";
 import { trackUsage } from "@/server/usage";
@@ -35,13 +36,20 @@ export async function GET(_req: NextRequest, { params }: { params: Params }) {
     return NextResponse.json({ id: job.id, status: job.status, error: job.error_code });
   }
 
-  let st;
+  const isSpicy = job.provider === "spicy";
+  let st: { done: boolean; error?: string; queue?: number | null; spicyUrl?: string } = { done: false };
   try {
-    st = await status(job.status_url);
+    if (isSpicy) {
+      const t = await spicyStatus(job.provider_request_id!);
+      st = t.state === "running" ? { done: false } : t.state === "failed" ? { done: true, error: t.code } : { done: true, spicyUrl: t.url };
+    } else {
+      const f = await status(job.status_url);
+      st = { done: f.status === "COMPLETED", error: f.error, queue: f.queue_position ?? null };
+    }
   } catch {
     return NextResponse.json({ id: job.id, status: "running" });
   }
-  if (st.status !== "COMPLETED") return NextResponse.json({ id: job.id, status: "running", queue: st.queue_position ?? null });
+  if (!st.done) return NextResponse.json({ id: job.id, status: "running", queue: st.queue ?? null });
 
   // Claim the job so parallel polls don't finish it twice.
   const { data: claimed } = await admin.from("generation_jobs").update({ status: "finishing" }).eq("id", job.id).eq("status", "running").select("id");
@@ -53,13 +61,20 @@ export async function GET(_req: NextRequest, { params }: { params: Params }) {
     return NextResponse.json({ id: job.id, status: state, error: code, refunded: job.sparks_cost });
   };
 
-  if (st.error) return failJob("provider_error");
+  if (st.error) return failJob(isSpicy && /moderat|safety|content|refus/i.test(st.error) ? "safety_blocked" : "provider_error", isSpicy && /moderat|safety|content|refus/i.test(st.error) ? "blocked" : "failed");
 
   try {
     let fileUrl: string;
     let width: number | null = null;
     let height: number | null = null;
-    if (job.kind === "image") {
+    if (isSpicy) {
+      fileUrl = st.spicyUrl!;
+      if (job.kind === "image") {
+        // SpicyAPI has no checker we rely on: our own check must pass (fail-closed).
+        const check = await checkImage(fileUrl, job.user_id);
+        if (check.ok !== true) return failJob(check.ok === false ? `image_check_${check.reason}` : "image_check_unavailable", "blocked");
+      }
+    } else if (job.kind === "image") {
       const r = await result<ImageResult>(job.response_url);
       if (r.has_nsfw_concepts?.some(Boolean)) return failJob("safety_blocked", "blocked");
       const img = r.images?.[0];
@@ -99,7 +114,7 @@ export async function GET(_req: NextRequest, { params }: { params: Params }) {
         role: "assistant",
         content: job.kind === "image" ? "📷 Photo" : `🎬 Video · ${job.duration_s}s`,
         media_id: media.id,
-        provider: "fal",
+        provider: job.provider,
         model: job.model,
         provider_request_id: job.provider_request_id,
       });
@@ -108,8 +123,8 @@ export async function GET(_req: NextRequest, { params }: { params: Params }) {
     await admin.from("generation_jobs").update({ status: "succeeded", media_id: media.id, finished_at: new Date().toISOString() }).eq("id", job.id);
     trackUsage(
       job.kind === "image"
-        ? { userId: job.user_id, feature: "image", provider: "fal", model: job.model, units: 1, unit: "image", costUsd: unitCosts.imagePerImage[job.model] ?? 0.03 }
-        : { userId: job.user_id, feature: "video", provider: "fal", model: job.model, units: job.duration_s ?? 0, unit: "seconds", costUsd: (job.duration_s ?? 0) * (unitCosts.videoPerSecond[job.model] ?? 0.1) },
+        ? { userId: job.user_id, feature: "image", provider: job.provider, model: job.model, units: 1, unit: "image", costUsd: unitCosts.imagePerImage[job.model] ?? 0.03 }
+        : { userId: job.user_id, feature: "video", provider: job.provider, model: job.model, units: job.duration_s ?? 0, unit: "seconds", costUsd: (job.duration_s ?? 0) * (unitCosts.videoPerSecond[job.model] ?? 0.1) },
     );
     return NextResponse.json(await done(admin, job.id, media.id));
   } catch (err) {

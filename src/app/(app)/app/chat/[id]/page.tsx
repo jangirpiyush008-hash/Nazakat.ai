@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { FREE_DAILY_MESSAGES, getCapabilities } from "@/config/features";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { availableDurations } from "@/server/media/fal";
+import { mediaDurations } from "@/server/media/provider";
 import type { VideoDuration } from "@/config/pricing";
 import { requireOnboarded } from "@/server/session";
 import { ChatWorkspace, type MediaRef } from "@/components/chat/chat-workspace";
@@ -51,7 +51,7 @@ export default async function ChatPage({ params, searchParams }: { params: Param
       chatAvailable={caps.chat}
       features={{ image: caps.image === "available", video: caps.video === "available", voice: caps.voice === "available", voiceNotes: caps.voiceNotes === "available" }}
       balance={Math.max(0, balance ?? 0)}
-      videoDurations={availableDurations() as VideoDuration[]}
+      videoDurations={mediaDurations() as VideoDuration[]}
       remaining={Math.max(0, FREE_DAILY_MESSAGES - (usage?.messages_used ?? 0))}
       dailyLimit={FREE_DAILY_MESSAGES}
     />
