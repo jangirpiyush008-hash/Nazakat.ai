@@ -1,5 +1,6 @@
 import "server-only";
 import { unitCosts } from "@/config/costs";
+import { languageById } from "@/config/languages";
 import { trackUsage } from "@/server/usage";
 import { elevenSpeak, elevenTranscribe, elevenTtsModel, elevenVoice } from "./elevenlabs";
 import { sarvamSpeak, sarvamSpeaker, sarvamSttModel, sarvamTranscribe, sarvamTtsModel } from "./sarvam";
@@ -27,7 +28,7 @@ export async function speak(
     try {
       const out =
         p === "sarvam"
-          ? await sarvamSpeak(text, { speaker: sarvamSpeaker(opts.gender), language: opts.chatLanguage === "english" ? "en-IN" : "hi-IN" })
+          ? await sarvamSpeak(text, { speaker: sarvamSpeaker(opts.gender), language: languageById(opts.chatLanguage).voice })
           : await elevenSpeak(text, elevenVoice(opts.gender, opts.voiceId));
       trackUsage({ userId: opts.userId, feature: opts.feature, provider: p, model: p === "sarvam" ? sarvamTtsModel() : elevenTtsModel(), units: text.length, unit: "chars", costUsd: text.length * (unitCosts.ttsPerChar[p] ?? 0) });
       return { ...out, provider: p };

@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import clsx from "clsx";
 import { requestDeletion, savePreferences, signOut } from "@/app/(app)/app/settings/actions";
+import { chatLanguages } from "@/config/languages";
 
 type Profile = {
   display_name: string;
@@ -56,7 +57,7 @@ export function SettingsForm({ profile }: { profile: Profile }) {
           What should companions call you?
           <input name="display_name" defaultValue={profile.display_name} maxLength={40} placeholder="Your name" className="h-10 w-40 rounded-xl bg-bg px-3 text-sm font-normal outline-none focus:shadow-[0_0_0_1px_#FF2E7E]" />
         </label>
-        <Select name="chat_language" label="Companions reply in" value={profile.chat_language} options={[["hinglish", "Hinglish"], ["hindi", "Hindi"], ["english", "English"]]} />
+        <Select name="chat_language" label="Companions reply in" value={profile.chat_language} options={chatLanguages.map((l) => [l.id, l.native === l.label ? l.label : `${l.label} · ${l.native}`])} />
         <Select name="interest" label="Interested in" value={profile.interest} options={[["women", "Women"], ["men", "Men"], ["anime", "Anime"]]} />
 
         <h2 className="label-caps mt-4 text-ink-3">Privacy</h2>

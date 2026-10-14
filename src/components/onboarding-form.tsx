@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import clsx from "clsx";
 import { Check } from "lucide-react";
+import { chatLanguages, type ChatLanguage } from "@/config/languages";
 import { createClient } from "@/lib/supabase/browser";
 
 type Interest = "women" | "men" | "anime";
-type Lang = "hinglish" | "hindi" | "english";
+type Lang = ChatLanguage;
 
 function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
@@ -122,9 +123,11 @@ export function OnboardingForm({ next, consentVersion, defaultInterest }: { next
           ))}
         </div>
         <h2 className="label-caps mt-2 text-ink-3">Companions reply in</h2>
-        <div className="flex gap-2">
-          {(["hinglish", "hindi", "english"] as const).map((l) => (
-            <Pill key={l} on={lang === l} onClick={() => setLang(l)}>{l[0].toUpperCase() + l.slice(1)}</Pill>
+        <div className="flex flex-wrap gap-2">
+          {chatLanguages.map((l) => (
+            <Pill key={l.id} on={lang === l.id} onClick={() => setLang(l.id)}>
+              {l.label}
+            </Pill>
           ))}
         </div>
       </section>

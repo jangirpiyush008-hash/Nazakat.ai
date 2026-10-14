@@ -16,7 +16,7 @@ export function sarvamSpeaker(gender: string) {
   return gender === "men" ? process.env.SARVAM_SPEAKER_MALE || "shubh" : process.env.SARVAM_SPEAKER_FEMALE || "ritu";
 }
 
-export async function sarvamSpeak(text: string, opts: { speaker: string; language: "hi-IN" | "en-IN" }) {
+export async function sarvamSpeak(text: string, opts: { speaker: string; language: string }) {
   const res = await fetch(`${API}/text-to-speech`, {
     method: "POST",
     headers: { "api-subscription-key": key(), "Content-Type": "application/json" },

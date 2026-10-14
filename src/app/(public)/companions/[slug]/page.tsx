@@ -84,6 +84,8 @@ export default async function CompanionPage({ params }: { params: Params }) {
             ))}
           </div>
 
+          <p className="text-[13px] text-ink-2">Chats in English, Hindi or Hinglish.</p>
+
           <div className="flex flex-col gap-1.5">
             <h2 className="label-caps mb-1 text-ink-3">What you can do</h2>
             {modalities.map((m) => (

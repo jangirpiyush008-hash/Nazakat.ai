@@ -3,12 +3,13 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { chatLanguageIds } from "@/config/languages";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 const prefs = z.object({
   display_name: z.string().trim().max(40).transform((v) => v || null),
-  chat_language: z.enum(["hinglish", "hindi", "english"]),
+  chat_language: z.enum(chatLanguageIds),
   interest: z.enum(["women", "men", "anime"]),
   memory_enabled: z.boolean(),
   discreet_mode: z.boolean(),

@@ -8,7 +8,6 @@ import {
   findCompanions,
   languageLabels,
   type CompanionFilters,
-  type Language,
 } from "@/lib/companions";
 import { cookies } from "next/headers";
 import { Search } from "lucide-react";
@@ -25,7 +24,6 @@ export const metadata: Metadata = {
 
 const filterSchema = z.object({
   gender: z.enum(["women", "men", "anime"]).optional().catch(undefined),
-  language: z.enum(["hinglish", "hindi", "english"]).optional().catch(undefined),
   vibe: z.enum(allVibes).optional().catch(undefined),
   interest: z.enum(allInterests).optional().catch(undefined),
   q: z.string().max(60).optional().catch(undefined),
@@ -72,7 +70,6 @@ export default async function ExplorePage({ searchParams }: { searchParams: SP }
         {/* Search */}
         <form action="/explore" className="mx-5 mt-6 flex gap-2 md:mx-8 2xl:mx-12" role="search">
           {filters.gender && <input type="hidden" name="gender" value={filters.gender} />}
-          {filters.language && <input type="hidden" name="language" value={filters.language} />}
           <label htmlFor="q" className="sr-only">Search companions</label>
           <div className="flex h-12 flex-1 items-center gap-2.5 rounded-full bg-surface px-4 focus-within:shadow-[0_0_0_1px_#FF2E7E,0_0_0_4px_rgba(255,46,126,.2)]">
             <Search className="size-[18px] text-ink-3" aria-hidden />
@@ -83,20 +80,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: SP }
 
         {/* Filters */}
         <section aria-label="Filters" className="sticky top-[57px] z-30 mx-5 mt-6 flex flex-col gap-2.5 rounded-2xl bg-surface/80 px-4 py-3 backdrop-blur-[20px] md:top-[73px] md:mx-8 2xl:mx-12">
-          <div className="flex items-center gap-2 overflow-x-auto">
-            <span className="w-[84px] flex-none text-[11px] tracking-[.1em] text-ink-3">LANGUAGE</span>
-            {(Object.keys(languageLabels) as Language[]).map((l) => (
-              <Chip
-                key={l}
-                href={hrefWith(filters, "language", l)}
-                selected={filters.language === l}
-                soon={!languageLabels[l].available}
-                deva={languageLabels[l].deva}
-              >
-                {languageLabels[l].label}
-              </Chip>
-            ))}
-          </div>
+          <p className="text-[12px] text-ink-3">Every companion chats in English, Hindi or Hinglish — pick yours in Settings.</p>
           <div className="flex items-center gap-2 overflow-x-auto">
             <span className="w-[84px] flex-none text-[11px] tracking-[.1em] text-ink-3">VIBE</span>
             {allVibes.map((v) => (
