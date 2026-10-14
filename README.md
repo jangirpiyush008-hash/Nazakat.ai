@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nazakat.ai
 
-## Getting Started
+India-first AI companion web app: original fictional adult characters, Hinglish/Hindi/English
+chat, user-controlled memory. "Nazakat" is a **working name**; trademark and domain are not cleared.
 
-First, run the development server:
+- Design handoff: [`design/README.md`](design/README.md)
+- Decisions, route map and plan: [`docs/DECISIONS.md`](docs/DECISIONS.md)
+- External APIs and approval status: [`docs/PROVIDER_MATRIX.md`](docs/PROVIDER_MATRIX.md)
+
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env.local   # every feature stays disabled until its vars are set
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Command | What it does |
+|---|---|
+| `pnpm dev` | Dev server (Turbopack) |
+| `pnpm build` | Production build |
+| `pnpm lint` | ESLint |
+| `pnpm exec tsc --noEmit` | Typecheck |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/app/(public)/   marketing, explore, companion, pricing, legal, help pages
+src/components/     UI primitives, character card, header/footer
+src/config/         brand, feature flags, draft pricing
+src/lib/            companion seed catalogue, legal page registry
+design/             Claude Design handoff (reference only, not shipped)
+docs/               decisions, provider matrix
+```
 
-## Learn More
+## Status
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Milestone 1 (public shell) is done. Auth, chat, payments and media are **not** implemented yet,
+and the UI says so instead of faking them. See the plan in `docs/DECISIONS.md`.

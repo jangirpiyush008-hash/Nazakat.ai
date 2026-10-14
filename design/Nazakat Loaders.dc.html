@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#050304;color:#FFF4F7;font-family:'Manrope',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#FF2E7E;text-decoration:none}a:hover{color:#FF6A3D}
+*{box-sizing:border-box}
+@keyframes cuffL{0%,100%{transform:rotate(-14deg)}40%{transform:rotate(4deg)}50%{transform:rotate(2deg)}70%{transform:rotate(-24deg)}}
+@keyframes cuffR{0%,100%{transform:rotate(14deg)}40%{transform:rotate(-4deg)}50%{transform:rotate(-2deg)}70%{transform:rotate(24deg)}}
+@keyframes spark{0%,38%{opacity:0;transform:scale(.2)}48%{opacity:1;transform:scale(1.2)}62%,100%{opacity:0;transform:scale(1.6)}}
+@keyframes cap{0%,20%{transform:translateY(0)}40%,70%{transform:translateY(-34px)}100%{transform:translateY(0)}}
+@keyframes stamp{0%,35%{opacity:0;transform:scale(.3)}45%{opacity:1;transform:scale(1.1)}65%{opacity:1;transform:scale(1)}80%,100%{opacity:0;transform:scale(1)}}
+@keyframes heartIn{0%,70%{opacity:0;transform:scale(.6)}85%{opacity:1;transform:scale(1.05)}100%{opacity:0;transform:scale(1)}}
+@keyframes mask{0%{transform:translateY(-60px) rotate(-6deg);opacity:0}25%{transform:translateY(0) rotate(0);opacity:1}55%{transform:translateY(0) rotate(0)}85%,100%{transform:translateY(-70px) rotate(5deg);opacity:0}}
+@keyframes reveal{0%,55%{opacity:.15}90%,100%{opacity:1}}
+@keyframes key{0%,30%{transform:rotate(0)}55%,100%{transform:rotate(90deg)}}
+@keyframes shackle{0%,55%{transform:translateY(0) rotate(0)}70%,100%{transform:translateY(-8px) rotate(-20deg)}}
+@keyframes clinkL{0%,100%{transform:rotate(0)}45%{transform:rotate(16deg)}55%{transform:rotate(12deg)}}
+@keyframes clinkR{0%,100%{transform:rotate(0)}45%{transform:rotate(-16deg)}55%{transform:rotate(-12deg)}}
+@keyframes ripple{0%,45%{opacity:0;transform:scale(.2)}55%{opacity:.9}100%{opacity:0;transform:scale(2.2)}}
+@keyframes bell{0%,100%{transform:rotate(-10deg)}50%{transform:rotate(10deg)}}
+@keyframes petal{0%{transform:translate(0,-10px) rotate(0);opacity:0}15%{opacity:1}100%{transform:translate(14px,80px) rotate(160deg);opacity:0}}
+@keyframes flame{0%,100%{transform:scaleY(1) scaleX(1)}30%{transform:scaleY(1.15) scaleX(.9) translateX(1px)}60%{transform:scaleY(.9) scaleX(1.1) translateX(-1px)}}
+@keyframes smoke{0%{opacity:0;transform:translateY(0) scale(.6)}30%{opacity:.8}100%{opacity:0;transform:translateY(-30px) scale(1.1)}}
+@keyframes smokeHeart{0%,40%{opacity:0;transform:scale(.5)}60%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.1) translateY(-8px)}}
+@keyframes diceL{0%{transform:translate(-20px,-30px) rotate(-90deg)}45%{transform:translate(0,0) rotate(8deg)}55%,100%{transform:translate(0,0) rotate(0)}}
+@keyframes diceR{0%{transform:translate(20px,-30px) rotate(90deg)}45%{transform:translate(0,0) rotate(-8deg)}55%,100%{transform:translate(0,0) rotate(0)}}
+@keyframes diceWord{0%,50%{opacity:0;transform:translateY(4px)}65%,100%{opacity:1;transform:translateY(0)}}
+@keyframes feather{0%{transform:translate(10px,-50px) rotate(-20deg)}25%{transform:translate(-14px,-20px) rotate(10deg)}50%{transform:translate(12px,10px) rotate(-14deg)}75%{transform:translate(-10px,38px) rotate(8deg)}100%{transform:translate(8px,62px) rotate(-6deg);opacity:0}}
+@keyframes beat{0%,100%{transform:scale(1);opacity:.5}25%{transform:scale(1.25);opacity:1}40%{transform:scale(1)}55%{transform:scale(1.2);opacity:1}}
+@keyframes beatHeart{0%,60%{opacity:0;transform:scale(.5)}75%{opacity:1;transform:scale(1.2)}100%{opacity:0;transform:scale(1)}}
+@keyframes drop{0%,30%{transform:translateY(0) rotate(0)}50%{transform:translateY(0) rotate(0)}100%{transform:translateY(60px) rotate(30deg);opacity:0}}
+@keyframes trail{0%{background-position:0 0}100%{background-position:200% 0}}
+@keyframes glow{0%,100%{opacity:.6}50%{opacity:1}}
+</style>
+</helmet>
+<div style="padding:48px;display:flex;flex-direction:column;gap:64px;min-width:1500px">
+
+<div style="display:flex;flex-direction:column;gap:12px;max-width:900px">
+  <div style="font-family:'Newsreader',serif;font-size:56px;font-weight:300;line-height:1">Nazakat <span style="font-style:italic;background:linear-gradient(135deg,#FF2E7E,#FF6A3D);-webkit-background-clip:text;background-clip:text;color:transparent">loaders</span></div>
+  <div style="color:#B9A9B3;font-size:15px;line-height:1.6;max-width:720px">Ten playful loops, 1.2–2s each, objects and symbols only. Live loop on the left, frozen start / middle / end frames on the right. In-app only, after the 18+ gate. “Spicy animations” and reduced-motion are tweaks on this page. Loops are CSS-driven SVG, ~2–4KB each.</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><span style="height:28px;padding:0 10px;border-radius:999px;background:#141015;font-size:12px;color:#B9A9B3;display:inline-flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#FF2E7E"></span>Rani #FF2E7E</span><span style="height:28px;padding:0 10px;border-radius:999px;background:#141015;font-size:12px;color:#B9A9B3;display:inline-flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#FF6A3D"></span>Sunset #FF6A3D</span><span style="height:28px;padding:0 10px;border-radius:999px;background:#141015;font-size:12px;color:#B9A9B3;display:inline-flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#FFB423"></span>Marigold #FFB423</span><span style="height:28px;padding:0 10px;border-radius:999px;background:#141015;font-size:12px;color:#B9A9B3;display:inline-flex;align-items:center">{{ modeLabel }}</span></div>
+</div>
+
+<!-- ===== SHEET ===== -->
+<div data-screen-label="Component sheet" style="display:flex;flex-direction:column;gap:16px">
+  <div style="display:flex;align-items:baseline;gap:16px"><span style="font-family:ui-monospace,monospace;font-size:12px;color:#7A6A74;letter-spacing:.1em">01</span><span style="font-family:'Newsreader',serif;font-size:28px">Animation set</span></div>
+  <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:1440px">
+    <sc-for list="{{ loaders }}" as="l" hint-placeholder-count="10">
+      <div style="background:#0A0709;border-radius:20px;padding:20px;display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:center;box-shadow:0 20px 60px rgba(0,0,0,.5);position:relative;opacity:{{ l.opacity }}">
+        <div style="position:relative;height:200px;border-radius:16px;background:radial-gradient(circle at 50% 45%,rgba(255,46,126,.22),transparent 65%),#141015;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">{{ l.live }}<div style="font-family:'Newsreader',serif;font-style:italic;font-size:13px;color:#FFF4F7;text-align:center;padding:0 10px;line-height:1.3">{{ l.line }}</div></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="display:flex;gap:8px;align-items:baseline"><span style="font-family:ui-monospace,monospace;font-size:11px;color:#7A6A74">{{ l.n }}</span><span style="font-family:'Newsreader',serif;font-size:22px">{{ l.name }}</span></div><span style="font-size:11px;color:#7A6A74">{{ l.dur }}</span></div>
+          <div style="font-size:12px;color:#B9A9B3;line-height:1.5">{{ l.use }}</div>
+          <div style="display:flex;gap:8px">
+            <div style="flex:1;display:flex;flex-direction:column;gap:4px;align-items:center"><div style="width:100%;aspect-ratio:1;border-radius:12px;background:#141015;display:flex;align-items:center;justify-content:center">{{ l.f0 }}</div><span style="font-size:10px;color:#7A6A74;letter-spacing:.1em">START</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:4px;align-items:center"><div style="width:100%;aspect-ratio:1;border-radius:12px;background:#141015;display:flex;align-items:center;justify-content:center">{{ l.f1 }}</div><span style="font-size:10px;color:#7A6A74;letter-spacing:.1em">MIDDLE</span></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:4px;align-items:center"><div style="width:100%;aspect-ratio:1;border-radius:12px;background:#141015;display:flex;align-items:center;justify-content:center">{{ l.f2 }}</div><span style="font-size:10px;color:#7A6A74;letter-spacing:.1em">END</span></div>
+          </div>
+          <div style="font-size:11px;color:#7A6A74">{{ l.badge }}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</div>
+
+<!-- ===== PROGRESS + ERROR ===== -->
+<div data-screen-label="Progress and error" style="display:flex;flex-direction:column;gap:16px">
+  <div style="display:flex;align-items:baseline;gap:16px"><span style="font-family:ui-monospace,monospace;font-size:12px;color:#7A6A74;letter-spacing:.1em">02</span><span style="font-family:'Newsreader',serif;font-size:28px">Lipstick-trail progress · Error state</span></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1.2fr;gap:16px;max-width:1440px">
+    <div style="background:#0A0709;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between;font-size:13px"><span style="font-family:'Newsreader',serif;font-style:italic">Setting the mood…</span><span style="color:#FFB423;font-weight:700">12%</span></div><div style="height:8px;border-radius:4px;background:#1E1720;overflow:hidden"><div style="width:12%;height:100%;border-radius:4px;background:linear-gradient(90deg,#FF2E7E,#FF6A3D,#FF2E7E);background-size:200% 100%;animation:trail 2s linear infinite;box-shadow:0 0 12px rgba(255,46,126,.6)"></div></div><div style="font-size:11px;color:#7A6A74">✦ 8 reserved · refunded if it fails</div></div>
+    <div style="background:#0A0709;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between;font-size:13px"><span style="font-family:'Newsreader',serif;font-style:italic">Lighting the candles…</span><span style="color:#FFB423;font-weight:700">46%</span></div><div style="height:8px;border-radius:4px;background:#1E1720;overflow:hidden"><div style="width:46%;height:100%;border-radius:4px;background:linear-gradient(90deg,#FF2E7E,#FF6A3D,#FF2E7E);background-size:200% 100%;animation:trail 2s linear infinite;box-shadow:0 0 12px rgba(255,46,126,.6)"></div></div><div style="font-size:11px;color:#7A6A74">~30s left</div></div>
+    <div style="background:#0A0709;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between;font-size:13px"><span style="font-family:'Newsreader',serif;font-style:italic">Almost ready for you…</span><span style="color:#FFB423;font-weight:700">84%</span></div><div style="height:8px;border-radius:4px;background:#1E1720;overflow:hidden"><div style="width:84%;height:100%;border-radius:4px;background:linear-gradient(90deg,#FF2E7E,#FF6A3D,#FF2E7E);background-size:200% 100%;animation:trail 2s linear infinite;box-shadow:0 0 12px rgba(255,46,126,.6)"></div></div><div style="font-size:11px;color:#7A6A74">~6s left</div></div>
+    <div style="background:#0A0709;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between;font-size:13px"><span style="font-family:'Newsreader',serif;font-style:italic">Ta-da 😘</span><span style="color:#FFB423;font-weight:700">100%</span></div><div style="height:8px;border-radius:4px;background:#1E1720;overflow:hidden"><div style="width:100%;height:100%;border-radius:4px;background:linear-gradient(90deg,#FF2E7E,#FF6A3D);box-shadow:0 0 12px rgba(255,46,126,.6)"></div></div><div style="font-size:11px;color:#FFB423">✦ 8 charged</div></div>
+    <div style="background:#0A0709;border-radius:20px;padding:20px;display:flex;gap:16px;align-items:center"><div style="width:100px;height:100px;border-radius:14px;background:#141015;display:flex;align-items:center;justify-content:center;flex:none">{{ errorAnim }}</div><div style="display:flex;flex-direction:column;gap:8px"><div style="font-family:'Newsreader',serif;font-style:italic;font-size:16px">Oops, kuch atak gaya. Try again?</div><div style="font-size:12px;color:#B9A9B3">Cuffs snap open and drop. Sparks refunded.</div><button style="align-self:flex-start;height:36px;padding:0 14px;border-radius:12px;border:0;background:linear-gradient(135deg,#FF2E7E,#FF6A3D);color:#fff;font:600 12px 'Manrope'">Try again</button></div></div>
+  </div>
+</div>
+
+<!-- ===== IN CONTEXT ===== -->
+<div data-screen-label="In context" style="display:flex;flex-direction:column;gap:16px">
+  <div style="display:flex;align-items:baseline;gap:16px"><span style="font-family:ui-monospace,monospace;font-size:12px;color:#7A6A74;letter-spacing:.1em">03</span><span style="font-family:'Newsreader',serif;font-size:28px">In context</span><span style="font-size:13px;color:#7A6A74">image generation · voice call · unlock · chat · payment</span></div>
+  <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+
+    <div style="width:360px;height:700px;flex:none;background:#0A0709;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+      <div style="display:flex;justify-content:space-between;padding:14px 20px 0;font-size:12px;font-weight:600"><span>11:14</span><span>●●● ▮</span></div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 20px"><span style="font-size:18px">←</span><span style="font-family:'Newsreader',serif;font-size:22px">Create image</span></div>
+      <div style="padding:0 20px;display:flex;flex-direction:column;gap:14px;flex:1">
+        <div style="padding:12px 14px;border-radius:14px;background:#141015;font-size:13px;color:#B9A9B3;line-height:1.5">“Meera on a Marine Drive bench, monsoon evening, yellow saree, fairy lights”</div>
+        <div style="flex:1;border-radius:20px;background:radial-gradient(circle at 50% 40%,rgba(255,46,126,.25),transparent 60%),#141015;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;position:relative">{{ ctxImage }}<div style="font-family:'Newsreader',serif;font-style:italic;font-size:16px;text-align:center;padding:0 24px;line-height:1.4">{{ ctxImageLine }}</div></div>
+        <div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;font-size:13px"><span style="font-family:'Newsreader',serif;font-style:italic">Lighting the candles…</span><span style="color:#FFB423;font-weight:700">46%</span></div><div style="height:8px;border-radius:4px;background:#1E1720;overflow:hidden"><div style="width:46%;height:100%;border-radius:4px;background:linear-gradient(90deg,#FF2E7E,#FF6A3D,#FF2E7E);background-size:200% 100%;animation:trail 2s linear infinite;box-shadow:0 0 12px rgba(255,46,126,.6)"></div></div><div style="display:flex;justify-content:space-between;font-size:11px;color:#7A6A74"><span>✦ 8 reserved · refunded if it fails</span><a href="#">Cancel</a></div></div>
+      </div>
+      <div style="padding:16px 20px 24px"><button style="width:100%;height:48px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#FFF4F7;font:600 14px 'Manrope'">Keep chatting while it bakes</button></div>
+    </div>
+
+    <div style="width:360px;height:700px;flex:none;background:radial-gradient(ellipse at 50% 30%,rgba(255,106,61,.35),transparent 55%),#0A0709;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+      <div style="display:flex;justify-content:space-between;padding:14px 20px 0;font-size:12px;font-weight:600"><span>11:14</span><span>●●● ▮</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center">
+        <div style="width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#FF6A3D,#3B0D22);box-shadow:0 0 0 8px rgba(255,46,126,.15),0 0 0 20px rgba(255,46,126,.06)"></div>
+        <div><div style="font-family:'Newsreader',serif;font-size:34px;font-weight:300">Meera</div><div style="font-size:12px;color:#B9A9B3">AI character · ✦ 4 / min · mic on only during the call</div></div>
+        {{ ctxCall }}
+        <div style="font-family:'Newsreader',serif;font-style:italic;font-size:16px">{{ ctxCallLine }}</div>
+      </div>
+      <div style="padding:24px;display:flex;justify-content:center;gap:20px"><span style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center">🎙</span><span style="width:64px;height:64px;border-radius:50%;background:#E11D48;display:flex;align-items:center;justify-content:center;font-size:20px">✕</span><span style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center">🔊</span></div>
+    </div>
+
+    <div style="width:360px;height:700px;flex:none;background:#0A0709;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+      <div style="display:flex;justify-content:space-between;padding:14px 20px 0;font-size:12px;font-weight:600"><span>11:14</span><span>●●● ▮</span></div>
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 20px"><span style="font-size:18px">←</span><span style="font-family:'Newsreader',serif;font-size:22px">Meera · Gallery</span></div>
+      <div style="padding:0 20px;flex:1;display:flex;flex-direction:column;gap:12px">
+        <div style="position:relative;flex:1;border-radius:20px;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,rgba(255,106,61,.5),transparent 60%),#2A1420"><div style="position:absolute;inset:0;backdrop-filter:blur(22px);background:rgba(10,7,9,.45);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">{{ ctxUnlock }}<div style="font-family:'Newsreader',serif;font-style:italic;font-size:16px;text-align:center;padding:0 24px">{{ ctxUnlockLine }}</div></div><span style="position:absolute;top:12px;left:12px;height:22px;padding:0 9px;border-radius:999px;background:rgba(255,255,255,.1);font-size:11px;font-weight:600;display:inline-flex;align-items:center">AI-generated · private</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:14px;background:#141015;font-size:13px"><span>Unlocking · ✦ 8</span><span style="color:#7A6A74">Balance after: ✦ 132</span></div>
+      </div>
+      <div style="padding:16px 20px 24px"><button style="width:100%;height:48px;border-radius:14px;border:0;background:#1E1720;color:#7A6A74;font:600 14px 'Manrope'">Unlocking…</button></div>
+    </div>
+
+    <div style="width:360px;height:700px;flex:none;background:radial-gradient(ellipse at 50% 0%,rgba(255,106,61,.3),transparent 55%),#0A0709;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+      <div style="display:flex;justify-content:space-between;padding:14px 20px 0;font-size:12px;font-weight:600"><span>11:14</span><span>●●● ▮</span></div>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 16px 12px;background:rgba(10,7,9,.4);backdrop-filter:blur(20px)"><span style="font-size:18px;padding:0 4px">←</span><span style="width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#FF6A3D,#3B0D22)"></span><div style="flex:1"><div style="display:flex;gap:6px;align-items:center"><b style="font-size:15px">Meera</b><span style="height:18px;padding:0 7px;border-radius:999px;background:rgba(255,255,255,.1);font-size:10px;font-weight:600;display:inline-flex;align-items:center">AI</span></div><div style="font-size:11px;color:#B9A9B3">Hinglish · memory on</div></div></div>
+      <div style="flex:1;padding:16px;display:flex;flex-direction:column;gap:10px;justify-content:flex-end">
+        <div style="align-self:flex-end;max-width:82%;background:linear-gradient(135deg,#FF2E7E,#FF6A3D);color:#fff;padding:10px 14px;border-radius:20px 20px 4px 20px;font-size:14px;line-height:1.5">Tumhe kya lagta hai, main kaisa hoon?</div>
+        <div style="align-self:flex-start;display:flex;gap:10px;align-items:center;padding:10px 14px;background:#1E1720;border-radius:20px 20px 20px 4px">{{ ctxChat }}<span style="font-size:12px;color:#B9A9B3">Meera is thinking…</span></div>
+        <div style="align-self:flex-start;font-family:'Newsreader',serif;font-style:italic;font-size:13px;color:#7A6A74;padding-left:6px">Long reply loading · heartbeat dots</div>
+      </div>
+      <div style="padding:8px 12px 14px"><div style="display:flex;align-items:center;gap:6px;padding:6px 6px 6px 14px;border-radius:999px;background:rgba(30,23,32,.75);border:1px solid rgba(255,255,255,.1)"><span style="font-size:14px;color:#7A6A74;flex:1">Message Meera…</span><span style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#FF2E7E,#FF6A3D);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700">↑</span></div></div>
+    </div>
+
+    <div style="width:360px;flex:none;background:#0A0709;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+      <div style="display:flex;justify-content:space-between;padding:14px 20px 0;font-size:12px;font-weight:600"><span>11:14</span><span>●●● ▮</span></div>
+      <div style="padding:60px 24px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center">{{ ctxPay }}<div style="font-family:'Newsreader',serif;font-size:24px">Verifying payment…</div><div style="font-size:13px;color:#B9A9B3;line-height:1.5">Gentlest loader here: the feather, no flirt line. Usually under a minute. Don't close this page.</div><div style="padding:12px 16px;border-radius:14px;background:#141015;font-size:13px;width:100%;display:flex;justify-content:space-between"><span>Nazakat Plus · monthly</span><span>₹299.00</span></div></div>
+    </div>
+  </div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;spicyAnimations&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Loaders&quot;},&quot;reducedMotion&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Motion&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const spicy = this.props.spicyAnimations ?? true;
+    const rm = this.props.reducedMotion ?? false;
+    const P = '#FF2E7E', O = '#FF6A3D', G = '#FFB423', D = '#0A0709';
+    // an(name, dur, t): CSS animation; t = frozen time in seconds (null = live). Reduced motion freezes at mid.
+    const an = (name, dur, t, origin, extra) => {
+      const tt = rm && t == null ? dur / 2 : t;
+      const s = { animation: `${name} ${dur}s ease-in-out infinite`, transformOrigin: origin || 'center', transformBox: 'fill-box', ...(extra || {}) };
+      if (tt != null) { s.animationDelay = `-${tt}s`; s.animationPlayState = 'paused'; }
+      return s;
+    };
+    const svg = (kids, size) => h('svg', { width: size || 110, height: size || 110, viewBox: '0 0 120 120', fill: 'none', style: { filter: 'drop-shadow(0 0 14px rgba(255,46,126,.45))', overflow: 'visible' } }, ...kids);
+    const star = (x, y, c, name, dur, t, delay) => h('path', { d: `M${x} ${y - 6}l1.6 4.4 4.4 1.6-4.4 1.6-1.6 4.4-1.6-4.4-4.4-1.6 4.4-1.6z`, fill: c || G, style: an(name || 'spark', dur, t, `${x}px ${y}px`, { animationDelay: t == null && delay ? `${delay}s` : undefined) });
+    const heart = (x, y, s, fill, extra) => h('path', { d: 'M0 6C0 2 -3 -2 -7 -2c-4 0 -6 3 -6 6 0 7 13 14 13 14s13 -7 13 -14c0 -3 -2 -6 -6 -6 -4 0 -7 4 -7 2z', transform: `translate(${x} ${y}) scale(${s})`, fill, ...(extra || {}) });
+
+    const cuffs = (t, err) => svg([
+      h('g', { style: an(err ? 'drop' : 'cuffL', 2, t, '48px 36px') }, h('circle', { cx: 44, cy: 62, r: 15, stroke: P, strokeWidth: 7 }), h('circle', { cx: 44, cy: 62, r: 15, stroke: 'rgba(255,255,255,.35)', strokeWidth: 2, strokeDasharray: '3 5' }), h('rect', { x: 46, y: 36, width: 8, height: 14, rx: 3, fill: O })),
+      h('g', { style: an(err ? 'drop' : 'cuffR', 2, t, '72px 36px', err ? { animationDelay: t == null ? '.15s' : undefined } : {}) }, h('circle', { cx: 76, cy: 62, r: 15, stroke: P, strokeWidth: 7 }), h('circle', { cx: 76, cy: 62, r: 15, stroke: 'rgba(255,255,255,.35)', strokeWidth: 2, strokeDasharray: '3 5' }), h('rect', { x: 66, y: 36, width: 8, height: 14, rx: 3, fill: O })),
+      h('rect', { x: 52, y: 32, width: 16, height: 6, rx: 3, fill: G }),
+      ...(err ? [] : [star(60, 60, G, 'spark', 2, t), star(30, 40, O, 'spark', 2, t, .1), star(92, 44, P, 'spark', 2, t, .2)])
+    ]);
+    const lipstick = (t) => svg([
+      h('rect', { x: 28, y: 58, width: 22, height: 40, rx: 5, fill: '#1E1720', stroke: G, strokeWidth: 2 }),
+      h('g', { style: an('cap', 2, t) }, h('rect', { x: 30, y: 30, width: 18, height: 30, rx: 4, fill: '#2A1420', stroke: G, strokeWidth: 2 })),
+      h('path', { d: 'M33 58v-16c0-4 4-6 8-6s6 2 6 6v16z', fill: '#E11D48' }),
+      h('g', { style: an('stamp', 2, t, '82px 62px') }, h('path', { d: 'M64 60c6-10 14-8 18-3 4-5 12-7 18 3-6 10-14 14-18 14s-12-4-18-14z', fill: P }), h('path', { d: 'M66 60h32', stroke: D, strokeWidth: 2 })),
+      h('g', { style: an('heartIn', 2, t, '82px 62px') }, heart(82, 58, 1.1, O))
+    ]);
+    const blindfold = (t) => svg([
+      h('rect', { x: 24, y: 24, width: 72, height: 72, rx: 12, fill: 'url(#img)', style: an('reveal', 2, t) }),
+      h('defs', null, h('linearGradient', { id: 'img', x1: 0, y1: 0, x2: 1, y2: 1 }, h('stop', { offset: 0, stopColor: O }), h('stop', { offset: 1, stopColor: P }))),
+      h('g', { style: an('mask', 2, t) }, h('path', { d: 'M18 56c10-10 22-14 32-8 4 2 6 2 10 0 10-6 22-2 32 8-6 14-18 20-30 16-4-2-10-2-14 0-12 4-24-2-30-16z', fill: '#2A1420', stroke: P, strokeWidth: 2.5 }), h('path', { d: 'M10 52c4 2 6 4 8 4M110 52c-4 2-6 4-8 4', stroke: P, strokeWidth: 2.5, strokeLinecap: 'round' }))
+    ]);
+    const lock = (t) => svg([
+      h('g', { style: an('shackle', 2, t, '60px 48px') }, h('path', { d: 'M46 50v-10a14 14 0 0 1 28 0v10', stroke: G, strokeWidth: 6, strokeLinecap: 'round' })),
+      heart(60, 56, 2.3, P),
+      h('circle', { cx: 60, cy: 68, r: 4, fill: D }),
+      h('g', { style: an('key', 2, t, '60px 68px') }, h('path', { d: 'M60 68h22M76 68v6M82 68v5', stroke: G, strokeWidth: 3.5, strokeLinecap: 'round' })),
+      star(36, 44, O, 'spark', 2, t), star(86, 40, G, 'spark', 2, t, .1), star(60, 100, P, 'spark', 2, t, .2)
+    ]);
+    const glasses = (t) => svg([
+      h('circle', { cx: 60, cy: 50, r: 14, stroke: G, strokeWidth: 2, style: an('ripple', 1.8, t, '60px 50px') }),
+      h('g', { style: an('clinkL', 1.8, t, '40px 100px') }, h('path', { d: 'M24 30h30l-4 24c-2 8-8 12-11 12s-9-4-11-12z', stroke: P, strokeWidth: 3, fill: 'rgba(255,46,126,.18)' }), h('path', { d: 'M39 66v26M30 94h18', stroke: P, strokeWidth: 3, strokeLinecap: 'round' }), h('path', { d: 'M28 46c6 2 16 2 22 0', stroke: O, strokeWidth: 3 })),
+      h('g', { style: an('clinkR', 1.8, t, '80px 100px') }, h('path', { d: 'M66 30h30l-4 24c-2 8-8 12-11 12s-9-4-11-12z', stroke: P, strokeWidth: 3, fill: 'rgba(255,46,126,.18)' }), h('path', { d: 'M81 66v26M72 94h18', stroke: P, strokeWidth: 3, strokeLinecap: 'round' }), h('path', { d: 'M70 46c6 2 16 2 22 0', stroke: O, strokeWidth: 3 }))
+    ]);
+    const ghungroo = (t) => svg([
+      h('path', { d: 'M20 40q40 18 80 0', stroke: G, strokeWidth: 3, strokeLinecap: 'round' }),
+      ...[32, 46, 60, 74, 88].map((x, i) => h('g', { key: i, style: an('bell', 1.2, t, `${x}px ${46 + (i === 2 ? 4 : i === 1 || i === 3 ? 3 : 0)}px`, { animationDelay: t == null ? `${i * .08}s` : undefined }) }, h('line', { x1: x, y1: 46 + (i === 2 ? 4 : i === 1 || i === 3 ? 3 : 0), x2: x, y2: 58, stroke: G, strokeWidth: 2 }), h('circle', { cx: x, cy: 65, r: 7, fill: G }), h('circle', { cx: x - 2, cy: 63, r: 2, fill: '#FFF4F7', opacity: .7 }))),
+      ...[0, 1, 2, 3].map(i => h('ellipse', { key: 'p' + i, cx: 30 + i * 20, cy: 20, rx: 4, ry: 6, fill: i % 2 ? '#FFF4F7' : P, opacity: .9, style: an('petal', 2, t, 'center', { animationDelay: t == null ? `${i * .45}s` : undefined }) }))
+    ]);
+    const candle = (t) => svg([
+      h('rect', { x: 48, y: 62, width: 24, height: 40, rx: 4, fill: '#2A1420', stroke: P, strokeWidth: 2 }),
+      h('path', { d: 'M48 66c6 4 12-2 24 2', stroke: P, strokeWidth: 2 }),
+      h('line', { x1: 60, y1: 54, x2: 60, y2: 62, stroke: G, strokeWidth: 2 }),
+      h('g', { style: an('flame', 1.2, t, '60px 54px') }, h('path', { d: 'M60 36c6 8 8 12 8 16a8 8 0 0 1-16 0c0-4 2-8 8-16z', fill: O }), h('path', { d: 'M60 44c3 4 4 6 4 8a4 4 0 0 1-8 0c0-2 1-4 4-8z', fill: G })),
+      h('path', { d: 'M60 32c-6-6 4-10-2-16', stroke: '#B9A9B3', strokeWidth: 2, strokeLinecap: 'round', style: an('smoke', 2, t, '60px 32px') }),
+      h('g', { style: an('smokeHeart', 2, t, '60px 20px') }, heart(60, 14, .8, 'rgba(255,46,126,.8)')),
+      h('text', { x: 60, y: 24, textAnchor: 'middle', fontFamily: 'Newsreader, serif', fontStyle: 'italic', fontSize: 18, fill: G, style: an('heartIn', 2, t, '60px 20px') }, 'M')
+    ]);
+    const dice = (t) => svg([
+      h('g', { style: an('diceL', 2, t, '38px 50px') }, h('rect', { x: 20, y: 32, width: 36, height: 36, rx: 8, fill: P }), h('circle', { cx: 30, cy: 42, r: 3.5, fill: '#fff' }), h('circle', { cx: 46, cy: 58, r: 3.5, fill: '#fff' }), h('circle', { cx: 38, cy: 50, r: 3.5, fill: '#fff' })),
+      h('g', { style: an('diceR', 2, t, '82px 50px') }, h('rect', { x: 64, y: 32, width: 36, height: 36, rx: 8, fill: O }), h('circle', { cx: 74, cy: 42, r: 3.5, fill: '#fff' }), h('circle', { cx: 90, cy: 42, r: 3.5, fill: '#fff' }), h('circle', { cx: 74, cy: 58, r: 3.5, fill: '#fff' }), h('circle', { cx: 90, cy: 58, r: 3.5, fill: '#fff' })),
+      h('text', { x: 60, y: 92, textAnchor: 'middle', fontFamily: 'Newsreader, serif', fontStyle: 'italic', fontSize: 15, fill: G, style: an('diceWord', 2, t, '60px 88px') }, 'Whisper · Ear')
+    ]);
+    const feather = (t) => svg([
+      h('g', { style: an('feather', 2, t, '60px 60px', { animationTimingFunction: 'linear' }) }, h('path', { d: 'M60 20c14 10 14 36 0 56-14-20-14-46 0-56z', fill: 'rgba(255,46,126,.35)', stroke: P, strokeWidth: 2 }), h('path', { d: 'M60 22v70M60 36l-8-4M60 46l10-5M60 56l-9-5M60 66l9-5', stroke: O, strokeWidth: 1.8, strokeLinecap: 'round' }))
+    ]);
+    const heartbeat = (t) => svg([
+      h('circle', { cx: 36, cy: 60, r: 7, fill: P, style: an('beat', 1.4, t, '36px 60px') }),
+      h('circle', { cx: 60, cy: 60, r: 7, fill: P, style: an('beat', 1.4, t, '60px 60px', { animationDelay: t == null ? '.15s' : undefined }) }),
+      h('g', { style: an('beatHeart', 1.4, t, '60px 60px') }, heart(60, 54, 1, O)),
+      h('circle', { cx: 84, cy: 60, r: 7, fill: P, style: an('beat', 1.4, t, '84px 60px', { animationDelay: t == null ? '.3s' : undefined }) })
+    ]);
+
+    const defs = [
+      ['01', 'Fuzzy pink handcuffs', cuffs, 2, 'Thoda intezaar… worth it hoga 😉', 'Image generation · page loads', true],
+      ['02', 'Lipstick kiss', lipstick, 2, 'Tumhare liye kuch special ban raha hai 💋', 'Image generation', true],
+      ['03', 'Silk blindfold', blindfold, 2, 'Aankhein band karo… aur ab kholo.', 'Image reveal after generation', true],
+      ['04', 'Heart lock & key', lock, 2, 'Unlocking something just for you ✦', 'Unlocking a blurred image', true],
+      ['05', 'Two wine glasses', glasses, 1.8, 'Cheers… Meera is picking up 📞', 'Voice note · voice call connecting', true],
+      ['06', 'Ghungroo & gajra', ghungroo, 2, 'Chhan chhan… aa rahi hoon.', 'The desi signature loader · page & chat loading', true],
+      ['07', 'Candle & smoke', candle, 2, 'Ek pal… mood set ho raha hai.', 'Companion thinking · safe default', false],
+      ['08', 'Flirty dice', dice, 2, 'Aaj ka plan, dice decide karega 🎲', 'Long reply · roleplay prompts', true],
+      ['09', 'Feather', feather, 2, 'Bas ek second…', 'Subtle default for slow loads · payment processing', false],
+      ['10', 'Typing heartbeat', heartbeat, 1.4, 'Soch rahi hoon… 💗', 'Chat thinking state', false]
+    ];
+    const loaders = defs.map(([n, name, fn, dur, line, use, isSpicy]) => {
+      const off = isSpicy && !spicy;
+      return { n, name, dur: `${dur}s loop`, line, use, opacity: off ? .35 : 1, live: fn(null), f0: fn(0.01), f1: fn(dur / 2), f2: fn(dur - 0.05), badge: off ? 'Hidden while “Spicy animations” is off — swapped for feather / candle / heartbeat.' : (isSpicy ? 'Spicy · hidden when the Settings toggle is off' : 'Always available · also the reduced-motion fallback set') };
+    });
+    const pick = (spicyFn, safeFn) => (spicy ? spicyFn : safeFn)(null);
+    const pickLine = (a, b) => spicy ? a : b;
+    return {
+      loaders,
+      modeLabel: `${spicy ? 'Spicy ON' : 'Spicy OFF'} · ${rm ? 'reduced motion: static frames' : 'motion on'}`,
+      errorAnim: cuffs(null, true),
+      ctxImage: pick(lipstick, candle), ctxImageLine: pickLine('Tumhare liye kuch special ban raha hai 💋', 'Ek pal… mood set ho raha hai.'),
+      ctxCall: pick(glasses, feather), ctxCallLine: pickLine('Cheers… Meera is picking up 📞', 'Connecting…'),
+      ctxUnlock: pick(lock, candle), ctxUnlockLine: pickLine('Unlocking something just for you ✦', 'Ek pal…'),
+      ctxChat: heartbeat(null),
+      ctxPay: feather(null)
+    };
+  }
+}
+</script>
+</body>
+</html>

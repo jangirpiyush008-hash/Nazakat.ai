@@ -1,26 +1,132 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * Nazakat design tokens — "Rani & Marigold" (design/README.md).
+ * Single source of truth: use these utilities (bg-surface, text-rani, …)
+ * instead of hex values in components.
+ */
+@theme {
+  --color-bg: #0a0709;
+  --color-surface: #141015;
+  --color-elevated: #1e1720;
+  --color-rani: #ff2e7e;
+  --color-sunset: #ff6a3d;
+  --color-marigold: #ffb423;
+  --color-wine: #3b0d22;
+  --color-sindoor: #e11d48;
+  --color-violet: #a78bfa;
+  --color-ink: #fff4f7;
+  --color-ink-2: #b9a9b3;
+  --color-ink-3: #7a6a74;
+  --color-on-gold: #1a0e14;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* Light theme (settings, legal, help) */
+  --color-l-bg: #fff7f9;
+  --color-l-text: #1a0e14;
+  --color-l-text-2: #5e3f4f;
+  --color-l-muted: #8a6a79;
+  --color-l-primary: #e0186a;
+  --color-l-chip: #fde7ef;
+  --color-l-divider: #f3e3ea;
+  --color-l-destructive: #b3122f;
+  --color-l-draft-bg: #fff0d1;
+  --color-l-draft-text: #8a4b12;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --font-display: var(--font-newsreader), Georgia, serif;
+  --font-ui: var(--font-manrope), var(--font-mukta), system-ui, sans-serif;
+  --font-deva-display: var(--font-tiro), var(--font-newsreader), serif;
+  --font-deva: var(--font-mukta), system-ui, sans-serif;
+
+  --radius-card: 20px;
+  --radius-btn: 14px;
+
+  --shadow-card: 0 20px 60px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 10px 40px rgba(255, 46, 126, 0.4);
+  --shadow-glow-sm: 0 8px 30px rgba(255, 46, 126, 0.35);
+
+  --animate-floaty: floaty 8s ease-in-out infinite;
+  --animate-shimmer: shimmer 3.2s ease-in-out infinite;
+  --animate-pulse-soft: pulse-soft 1.2s ease-in-out infinite;
+  --animate-glow-drift: glow-drift 14s ease-in-out infinite;
+
+  @keyframes floaty {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-120%) skewX(-20deg); }
+    100% { transform: translateX(220%) skewX(-20deg); }
+  }
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 1; }
+  }
+  @keyframes glow-drift {
+    0%, 100% { opacity: 0.7; transform: translate(0, 0) scale(1); }
+    50% { opacity: 1; transform: translate(24px, -16px) scale(1.06); }
   }
 }
 
+@utility bg-saanjh {
+  background-image: linear-gradient(135deg, #ff2e7e, #ff6a3d);
+}
+
+@utility text-gradient {
+  background-image: linear-gradient(135deg, #ff2e7e, #ff6a3d);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility glass {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+@utility label-caps {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+html {
+  color-scheme: dark;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Film grain on dark surfaces (~5% alpha) */
+.grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+:focus-visible {
+  outline: 1px solid var(--color-rani);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(255, 46, 126, 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* "Reduce motion" app setting mirrors the OS preference */
+[data-reduce-motion="true"] *, [data-reduce-motion="true"] *::before {
+  animation: none !important;
 }
