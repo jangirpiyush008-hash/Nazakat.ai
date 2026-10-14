@@ -15,6 +15,8 @@ const body = z.object({
   conversationId: z.string().uuid(),
   kind: z.enum(["image", "video"]),
   prompt: z.string().trim().min(2).max(500),
+  /** Animate one of the user's own (already checked) photos. */
+  sourceMediaId: z.string().uuid().optional(),
   duration: z.union(videoDurations.map((d) => z.literal(d)) as unknown as [z.ZodLiteral<5>, z.ZodLiteral<8>, z.ZodLiteral<10>, z.ZodLiteral<15>]).optional(),
 });
 
@@ -36,7 +38,7 @@ export async function POST(request: NextRequest) {
 
   const parsed = body.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return fail(400, "invalid");
-  const { conversationId, kind, prompt } = parsed.data;
+  const { conversationId, kind, prompt, sourceMediaId } = parsed.data;
   const duration = kind === "video" ? (parsed.data.duration ?? 5) : null;
 
   const caps = getCapabilities();
@@ -56,7 +58,16 @@ export async function POST(request: NextRequest) {
   if (!verdict.ok) return NextResponse.json({ error: "blocked", reason: verdict.reason }, { status: 422 });
 
   const cost = kind === "image" ? sparkCosts.image : sparkCosts.video[duration as 5 | 8 | 10 | 15];
-  const chain = kind === "image" ? falChains.image() : companion.portrait_path ? [...falChains.imageToVideo(), ...falChains.textToVideo()] : falChains.textToVideo();
+  // Image-to-video source: the user's own checked photo (RLS: owner only), else the companion portrait.
+  let sourcePath: { bucket: string; path: string } | null = null;
+  if (kind === "video" && sourceMediaId) {
+    const { data: src } = await supabase.from("media_assets").select("storage_path, kind, companion_id").eq("id", sourceMediaId).maybeSingle();
+    if (!src || src.kind !== "image" || src.companion_id !== companion.id) return fail(400, "invalid_source");
+    sourcePath = { bucket: "generations", path: src.storage_path };
+  } else if (kind === "video" && companion.portrait_path) {
+    sourcePath = { bucket: "portraits", path: companion.portrait_path };
+  }
+  const chain = kind === "image" ? falChains.image() : sourcePath ? [...falChains.imageToVideo(), ...falChains.textToVideo()] : falChains.textToVideo();
   const model = chain[0] ?? "unconfigured";
 
   const { data: job, error: jobError } = await admin
@@ -75,8 +86,8 @@ export async function POST(request: NextRequest) {
   try {
     const full = buildMediaPrompt(kind, companion.appearance, companion.name, prompt);
     let startImage: string | undefined;
-    if (kind === "video" && companion.portrait_path) {
-      const { data: signed } = await admin.storage.from("portraits").createSignedUrl(companion.portrait_path, 600);
+    if (sourcePath) {
+      const { data: signed } = await admin.storage.from(sourcePath.bucket).createSignedUrl(sourcePath.path, 900);
       startImage = signed?.signedUrl;
     }
     const sub = await submitWithFallback(kind, full, { duration: duration ?? undefined, startImageUrl: startImage });

@@ -16,6 +16,7 @@ export function MediaSheet({
   name,
   balance,
   durations,
+  fromPhoto = false,
   onClose,
   onCreate,
 }: {
@@ -23,6 +24,8 @@ export function MediaSheet({
   name: string;
   balance: number;
   durations: VideoDuration[];
+  /** Animating a photo the user already has. */
+  fromPhoto?: boolean;
   onClose: () => void;
   onCreate: (prompt: string, duration?: VideoDuration) => void;
 }) {
@@ -38,7 +41,7 @@ export function MediaSheet({
           <X className="size-5" />
         </button>
         <h2 id="media-title" className="font-display text-[28px] font-light">
-          {kind === "image" ? `Ask ${name} for a photo` : `Ask ${name} for a video`}
+          {kind === "image" ? `Ask ${name} for a photo` : fromPhoto ? `Bring this photo to life` : `Ask ${name} for a video`}
         </h2>
         <label htmlFor="media-prompt" className="sr-only">Describe it</label>
         <textarea

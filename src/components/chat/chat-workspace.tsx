@@ -57,6 +57,7 @@ export function ChatWorkspace(props: {
   const [toast, setToast] = useState<string | null>(null);
   const [panel, setPanel] = useState(false);
   const [sheet, setSheet] = useState<"image" | "video" | null>(null);
+  const [sourceMediaId, setSourceMediaId] = useState<string | null>(null);
   const [balance, setBalance] = useState(props.balance);
   const [voiceLoading, setVoiceLoading] = useState<string | null>(null);
   const voiceCache = useRef(new Map<string, string>());
@@ -181,8 +182,9 @@ export function ChatWorkspace(props: {
     }
   };
 
-  const createMedia = async (kind: "image" | "video", prompt: string, duration?: VideoDuration) => {
+  const createMedia = async (kind: "image" | "video", prompt: string, duration?: VideoDuration, fromMedia?: string | null) => {
     setSheet(null);
+    setSourceMediaId(null);
     const placeholderId = `job-${Date.now()}`;
     setMessages((m) => [
       ...m,
@@ -192,7 +194,7 @@ export function ChatWorkspace(props: {
     const res = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ conversationId: props.conversationId, kind, prompt, duration }),
+      body: JSON.stringify({ conversationId: props.conversationId, kind, prompt, duration, ...(fromMedia ? { sourceMediaId: fromMedia } : {}) }),
     });
     const j = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -308,7 +310,21 @@ export function ChatWorkspace(props: {
                   ) : (
                     <video src={m.media.url} controls playsInline className="max-h-[480px] w-[260px] md:w-[300px]" />
                   )}
-                  <figcaption className="px-3 py-1.5 text-[11px] text-ink-3">AI-generated · private to you</figcaption>
+                  <figcaption className="flex items-center justify-between gap-2 px-3 py-1.5 text-[11px] text-ink-3">
+                    AI-generated · private to you
+                    {m.media.kind === "image" && props.features.video && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSourceMediaId(m.media!.id);
+                          setSheet("video");
+                        }}
+                        className="inline-flex items-center gap-1 font-semibold text-marigold hover:text-ink"
+                      >
+                        <Clapperboard className="size-3.5" /> Make it a video
+                      </button>
+                    )}
+                  </figcaption>
                 </figure>
               ) : m.role === "assistant" && m.pending && !m.content ? (
                 <div className="flex items-center gap-2 rounded-[20px_20px_20px_4px] bg-elevated px-4 py-3" aria-label={`${c.name} is typing`}>
@@ -431,7 +447,18 @@ export function ChatWorkspace(props: {
       </section>
 
       {sheet && (
-        <MediaSheet kind={sheet} name={c.name} balance={balance} durations={props.videoDurations} onClose={() => setSheet(null)} onCreate={(p, d) => createMedia(sheet, p, d)} />
+        <MediaSheet
+          kind={sheet}
+          name={c.name}
+          balance={balance}
+          durations={props.videoDurations}
+          fromPhoto={Boolean(sourceMediaId)}
+          onClose={() => {
+            setSheet(null);
+            setSourceMediaId(null);
+          }}
+          onCreate={(p, d) => createMedia(sheet, p, d, sourceMediaId)}
+        />
       )}
 
       {/* Memory panel: side column on desktop, sheet on mobile */}

@@ -190,3 +190,14 @@ are recorded and audit-logged), real portraits, and automated E2E tests.
 - Memory extraction, prompt safety checks and call replies use the same provider layer, through `completeText`.
 - Note for the owner: DeepSeek's API processes data in China. Consider a US-hosted endpoint for the same model before launch
   (DPDP cross-border rules, IT Act 69A). Set it with `DEEPSEEK_BASE_URL`.
+
+## Photo checker + image-to-video from user photos (2026-10-15)
+
+- `server/media/image-check.ts`: Claude Haiku vision reviews every finished photo before it is stored or shown. Swimwear,
+  lingerie and romance are allowed; nudity, sex acts, anyone who could be under 18, gore and hate symbols are blocked and refunded.
+- Fail-closed for providers without their own checker. For fal.ai, whose checker is on, a checker outage falls back to fal's verdict.
+- "Make it a video" on a photo in chat animates that already-checked photo with Kling image-to-video. Ownership and companion
+  are verified with RLS.
+- SpicyAPI: the key is stored in Railway, but the adapter is not built. The docs could not be fetched (tool permission
+  denied), and the request format will not be guessed. Videos stay on fal.ai: frame-level checking isn't available, so no
+  unfiltered video provider is used.

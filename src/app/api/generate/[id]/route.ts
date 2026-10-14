@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { checkImage, providerHasOwnSafetyChecker } from "@/server/media/image-check";
 import { result, status, type ImageResult, type VideoResult } from "@/server/media/fal";
 import { unitCosts } from "@/config/costs";
 import { refundSparks } from "@/server/sparks";
@@ -66,6 +67,10 @@ export async function GET(_req: NextRequest, { params }: { params: Params }) {
       fileUrl = img.url;
       width = img.width;
       height = img.height;
+      // Our own check on the finished photo, before it is stored or shown.
+      const check = await checkImage(img.url, job.user_id);
+      if (check.ok === false) return failJob(`image_check_${check.reason}`, "blocked");
+      if (check.ok === null && !providerHasOwnSafetyChecker(job.provider)) return failJob("image_check_unavailable", "blocked");
     } else {
       const r = await result<VideoResult>(job.response_url);
       if (!r.video?.url) return failJob("empty_result");
