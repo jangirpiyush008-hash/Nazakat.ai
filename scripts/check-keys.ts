@@ -32,6 +32,16 @@ await run("Anthropic (chat)", ["AI_CHAT_API_KEY"], async () => {
   if (!ids.includes(model)) throw new Error(`key works but model ${model} not available`);
   return `model ${model} available`;
 });
+await run("DeepSeek (English chat)", ["DEEPSEEK_API_KEY"], async () => {
+  const r = await must(await fetch(`${env.DEEPSEEK_BASE_URL || "https://api.deepseek.com"}/models`, { headers: { Authorization: `Bearer ${env.DEEPSEEK_API_KEY}` } }));
+  const ids = ((await r.json()).data as { id: string }[]).map((m) => m.id);
+  return `models: ${ids.slice(0, 5).join(", ")}`;
+});
+await run("Sarvam (Hindi chat)", ["SARVAM_API_KEY"], async () => {
+  if (!spend) return "key present (use --spend to test a one-line Hindi reply)";
+  const r = await must(await fetch("https://api.sarvam.ai/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${env.SARVAM_API_KEY}`, "api-subscription-key": env.SARVAM_API_KEY!, "Content-Type": "application/json" }, body: JSON.stringify({ model: env.SARVAM_CHAT_MODEL || "sarvam-105b-conversations", messages: [{ role: "user", content: "Ek line mein hello bolo" }], max_tokens: 40, reasoning_effort: null }) }));
+  return `reply: ${String((await r.json()).choices?.[0]?.message?.content ?? "").slice(0, 60)}`;
+});
 await run("ElevenLabs", ["ELEVENLABS_API_KEY"], async () => {
   const r = await must(await fetch("https://api.elevenlabs.io/v1/user/subscription", { headers: { "xi-api-key": env.ELEVENLABS_API_KEY! } }));
   const j = await r.json();

@@ -179,3 +179,14 @@ are recorded and audit-logged), real portraits, and automated E2E tests.
 - **Cost tracking:** a `usage_events` table records estimated USD per AI call (finance role only). Unit costs live in
   `src/config/costs.ts` and are estimates to reconcile against invoices.
 - **Payments:** deferred by the owner until after feature testing.
+
+## Chat providers by language (2026-10-15)
+
+- English → DeepSeek (`deepseek-flash`). Hindi and Hinglish → Sarvam (`sarvam-105b-conversations`). Claude is a backup in both.
+  Configure with `CHAT_PROVIDERS_ENGLISH` / `CHAT_PROVIDERS_HINDI`.
+- If a provider fails before sending anything, the next one is tried. A failure mid-reply shows an error.
+- `server/ai/output-guard.ts` checks every streamed reply. On explicit terms, or minor-coded terms together with
+  sexual/romantic terms, it stops the stream, swaps in a safe line, and stores the message as `moderation=blocked`.
+- Memory extraction, prompt safety checks and call replies use the same provider layer, through `completeText`.
+- Note for the owner: DeepSeek's API processes data in China. Consider a US-hosted endpoint for the same model before launch
+  (DPDP cross-border rules, IT Act 69A). Set it with `DEEPSEEK_BASE_URL`.

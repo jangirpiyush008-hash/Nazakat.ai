@@ -1,7 +1,8 @@
 import "server-only";
-import { llmCost } from "@/config/costs";
-import { Anthropic, chatModel } from "@/server/ai/anthropic";
-import { trackUsage } from "@/server/usage";
+import { z } from "zod";
+import { completeText, parseJsonLoose } from "@/server/ai/llm";
+
+const verdictSchema = z.object({ allowed: z.boolean(), reason: z.enum(["ok", "minor", "explicit", "real_person", "other"]) });
 
 /**
  * Pre-generation prompt check. Hard rules (never relaxed): no sexual content
@@ -17,37 +18,21 @@ export async function checkPrompt(prompt: string, userId: string | null = null):
   if (minorTerms.test(prompt)) return { ok: false, reason: "minor" };
   if (explicitTerms.test(prompt)) return { ok: false, reason: "explicit" };
 
-  const key = process.env.AI_CHAT_API_KEY;
-  if (!key) return { ok: true }; // keyword checks + provider safety checker still apply
-  const client = new Anthropic({ apiKey: key, timeout: 20_000, maxRetries: 1 });
   try {
-    const res = await client.messages.create({
-      model: chatModel(),
-      max_tokens: 512,
-      output_config: {
-        effort: "low",
-        format: {
-          type: "json_schema",
-          schema: {
-            type: "object",
-            additionalProperties: false,
-            required: ["allowed", "reason"],
-            properties: { allowed: { type: "boolean" }, reason: { type: "string", enum: ["ok", "minor", "explicit", "real_person", "other"] } },
-          },
-        },
-      },
+    const reply = await completeText({
+      language: "english",
+      userId,
+      feature: "safety",
+      maxTokens: 120,
       system:
-        "You screen prompts for an adults-only AI companion app that generates images/videos of fictional adult characters. ALLOW: romance, flirting, glamour, fashion, swimwear, lingerie, sensual-but-clothed poses, kissing, dates, any normal scene. BLOCK as 'minor': anything suggesting a person under 18 or child-like features in a romantic/sexual context. BLOCK as 'explicit': nudity, exposed genitals/nipples, or sexual acts. BLOCK as 'real_person': named real people, celebrities, politicians. BLOCK as 'other': gore, extreme violence, hate symbols, illegal acts. Otherwise allowed=true, reason='ok'.",
-      messages: [{ role: "user", content: prompt }],
+        'You screen prompts for an adults-only AI companion app that generates images/videos of fictional adult characters. ALLOW: romance, flirting, glamour, fashion, swimwear, lingerie, sensual-but-clothed poses, kissing, dates, any normal scene. BLOCK as "minor": anything suggesting a person under 18 or child-like features in a romantic/sexual context. BLOCK as "explicit": nudity, exposed genitals/nipples, or sexual acts. BLOCK as "real_person": named real people, celebrities, politicians. BLOCK as "other": gore, extreme violence, hate symbols, illegal acts. Reply with ONLY JSON: {"allowed": true|false, "reason": "ok|minor|explicit|real_person|other"}',
+      history: [{ role: "user", content: prompt }],
     });
-    trackUsage({ userId, feature: "safety", provider: "anthropic", model: res.model, units: res.usage.input_tokens + res.usage.output_tokens, unit: "tokens", costUsd: llmCost(res.model, res.usage.input_tokens, res.usage.output_tokens) });
-    if (res.stop_reason === "refusal") return { ok: false, reason: "other" };
-    const text = res.content.find((b) => b.type === "text");
-    if (!text || text.type !== "text") return { ok: true };
-    const v = JSON.parse(text.text) as { allowed: boolean; reason: SafetyVerdict extends { reason: infer R } ? R : never };
+    const v = parseJsonLoose(reply, verdictSchema);
+    if (!v) return { ok: true }; // unparseable: keyword checks + provider/image checks still apply
     return v.allowed ? { ok: true } : { ok: false, reason: v.reason === "ok" ? "other" : v.reason };
   } catch {
-    return { ok: true }; // classifier outage: keyword checks and provider checker still apply
+    return { ok: true }; // classifier outage: keyword checks + image checks still apply
   }
 }
 

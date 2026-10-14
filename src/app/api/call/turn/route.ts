@@ -2,7 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { replyOnce, type Turn } from "@/server/ai/anthropic";
+import { completeText, type Turn } from "@/server/ai/llm";
+import { SAFE_REPLACEMENT, unsafeReply } from "@/server/ai/output-guard";
 import { COMPANION_RULES, contextMessage } from "@/server/ai/prompt";
 import { billCallMinutes } from "@/server/calls";
 import { rateLimit, tooMany } from "@/server/rate-limit";
@@ -61,7 +62,8 @@ export async function POST(request: NextRequest) {
     const context =
       contextMessage({ language: profile.chat_language, memories: profile.memory_enabled ? (memories ?? []).map((m) => m.fact) : [], displayName: profile.display_name }) +
       "\nThis is a live voice call. Reply in 1–2 short, natural spoken sentences. No emojis, lists or stage directions.";
-    const reply = await replyOnce({ system: COMPANION_RULES, persona: persona.system_prompt, history: turns, context, userId: auth.user.id });
+    const raw = await completeText({ system: `${COMPANION_RULES}\n\n${persona.system_prompt}\n\n${context}`, history: turns, language: profile.chat_language, userId: auth.user.id, feature: "call_llm", maxTokens: 300 });
+    const reply = raw && unsafeReply(raw) ? SAFE_REPLACEMENT : raw;
     if (!reply) return NextResponse.json({ error: "refused", heard: heard.text, minutes: bill.minutes }, { status: 422 });
 
     const voice = await speak(reply, { gender: companion.gender, voiceId: companion.voice_id, chatLanguage: profile.chat_language, userId: auth.user.id, feature: "call_tts" });

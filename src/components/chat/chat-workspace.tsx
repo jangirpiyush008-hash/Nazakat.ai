@@ -131,6 +131,7 @@ export function ChatWorkspace(props: {
           const ev = JSON.parse(line) as ChatEvent;
           if (ev.t === "user" && tempUser) setMessages((m) => m.map((x) => (x.id === tempUser.id ? { ...x, id: ev.id, pending: false } : x)));
           else if (ev.t === "delta") setMessages((m) => m.map((x) => (x.id === tempReply.id ? { ...x, content: x.content + ev.text } : x)));
+          else if (ev.t === "replace") setMessages((m) => m.map((x) => (x.id === tempReply.id ? { ...x, content: ev.text } : x)));
           else if (ev.t === "done") {
             setMessages((m) => m.map((x) => (x.id === tempReply.id ? { ...x, id: ev.id || x.id, pending: false } : x)));
             if (ev.remaining !== null) setRemaining(ev.remaining);

@@ -3,7 +3,8 @@ import { z } from "zod";
 import { FREE_DAILY_MESSAGES, getCapabilities } from "@/config/features";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { Anthropic, chatModel, extractMemories, streamReply, type Turn } from "@/server/ai/anthropic";
+import { extractMemories, NoProviderError, streamChat, type Turn } from "@/server/ai/llm";
+import { SAFE_REPLACEMENT, unsafeReply } from "@/server/ai/output-guard";
 import { llmCost } from "@/config/costs";
 import { COMPANION_RULES, contextMessage } from "@/server/ai/prompt";
 import { rateLimit, tooMany } from "@/server/rate-limit";
@@ -25,6 +26,8 @@ const HISTORY_TURNS = 40;
 export type ChatEvent =
   | { t: "user"; id: string }
   | { t: "delta"; text: string }
+  /** The reply failed the safety check: replace what was shown with this text. */
+  | { t: "replace"; text: string }
   | { t: "done"; id: string; remaining: number | null }
   | { t: "memory"; items: { id: string; fact: string; category: string }[] }
   | { t: "error"; code: ErrorCode };
@@ -95,68 +98,82 @@ export async function POST(request: NextRequest) {
       const send = (e: ChatEvent) => controller.enqueue(encoder.encode(JSON.stringify(e) + "\n"));
       if (userMessageId) send({ t: "user", id: userMessageId });
 
-      const llm = streamReply({
-        system: COMPANION_RULES,
-        persona: persona.system_prompt,
-        history,
-        context: contextMessage({ language: profile.chat_language, memories: known, displayName: profile.display_name }),
-        signal: request.signal,
-      });
-      if (!llm) {
-        send({ t: "error", code: "unavailable" });
-        return controller.close();
-      }
-
       let reply = "";
+      let provider = "unknown";
+      let replaced = false;
       try {
-        for await (const event of llm) {
-          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-            reply += event.delta.text;
-            send({ t: "delta", text: event.delta.text });
+        for await (const chunk of streamChat({
+          system: COMPANION_RULES,
+          persona: persona.system_prompt,
+          history,
+          context: contextMessage({ language: profile.chat_language, memories: known, displayName: profile.display_name }),
+          language: profile.chat_language,
+          signal: request.signal,
+        })) {
+          if (chunk.type === "delta") {
+            reply += chunk.text;
+            if (unsafeReply(reply)) {
+              // Stop showing it and swap in a safe line.
+              replaced = true;
+              reply = SAFE_REPLACEMENT;
+              send({ t: "replace", text: SAFE_REPLACEMENT });
+              break;
+            }
+            send({ t: "delta", text: chunk.text });
+            continue;
           }
+          provider = chunk.provider;
+          if (chunk.refused && !reply) {
+            send({ t: "error", code: "refused" });
+            return controller.close();
+          }
+          trackUsage({ userId: user.id, feature: "chat", provider: chunk.provider, model: chunk.model, units: chunk.inputTokens + chunk.outputTokens, unit: "tokens", costUsd: llmCost(chunk.model, chunk.inputTokens, chunk.outputTokens) });
+          const { data: saved } = await admin
+            .from("messages")
+            .insert({
+              conversation_id: convo.id,
+              user_id: user.id,
+              role: "assistant",
+              content: reply.trim() || "…",
+              provider: chunk.provider,
+              model: chunk.model,
+              provider_request_id: chunk.requestId,
+              input_tokens: chunk.inputTokens,
+              output_tokens: chunk.outputTokens,
+            })
+            .select("id")
+            .single();
+          await admin.from("conversations").update({ last_message_at: new Date().toISOString() }).eq("id", convo.id);
+          send({ t: "done", id: saved?.id ?? "", remaining });
         }
-        const final = await llm.finalMessage();
-        if (final.stop_reason === "refusal" && !reply) {
-          send({ t: "error", code: "refused" });
-          return controller.close();
+        if (replaced) {
+          const { data: saved } = await admin
+            .from("messages")
+            .insert({ conversation_id: convo.id, user_id: user.id, role: "assistant", content: SAFE_REPLACEMENT, provider, moderation: "blocked" })
+            .select("id")
+            .single();
+          await admin.from("conversations").update({ last_message_at: new Date().toISOString() }).eq("id", convo.id);
+          send({ t: "done", id: saved?.id ?? "", remaining });
         }
-        const { data: saved } = await admin
-          .from("messages")
-          .insert({
-            conversation_id: convo.id,
-            user_id: user.id,
-            role: "assistant",
-            content: reply.trim() || "…",
-            provider: "anthropic",
-            model: final.model,
-            provider_request_id: final.id,
-            input_tokens: final.usage.input_tokens,
-            output_tokens: final.usage.output_tokens,
-          })
-          .select("id")
-          .single();
-        await admin.from("conversations").update({ last_message_at: new Date().toISOString() }).eq("id", convo.id);
-        trackUsage({ userId: user.id, feature: "chat", provider: "anthropic", model: final.model, units: final.usage.input_tokens + final.usage.output_tokens, unit: "tokens", costUsd: llmCost(final.model, final.usage.input_tokens, final.usage.output_tokens) });
-        send({ t: "done", id: saved?.id ?? "", remaining });
       } catch (err) {
         if (request.signal.aborted) {
           // User pressed stop: keep what they saw.
-          if (reply.trim()) {
-            await admin.from("messages").insert({ conversation_id: convo.id, user_id: user.id, role: "assistant", content: reply.trim(), provider: "anthropic", model: chatModel() });
+          if (reply.trim() && !replaced) {
+            await admin.from("messages").insert({ conversation_id: convo.id, user_id: user.id, role: "assistant", content: reply.trim(), provider });
           }
           return controller.close();
         }
-        const code: ErrorCode = err instanceof Anthropic.APIConnectionTimeoutError ? "timeout" : "failed";
-        // Log the provider error class only — never message content.
-        console.error("chat_provider_error", err instanceof Anthropic.APIError ? err.status : (err as Error).name);
+        const code: ErrorCode = err instanceof NoProviderError ? "unavailable" : (err as Error).name === "TimeoutError" ? "timeout" : "failed";
+        // Log the provider error only — never message content.
+        console.error("chat_provider_error", (err as Error).message.slice(0, 120));
         send({ t: "error", code });
         return controller.close();
       }
 
       // Memory extraction runs after the reply is visible.
-      if (profile.memory_enabled && text) {
+      if (profile.memory_enabled && text && !replaced) {
         try {
-          const found = await extractMemories(lastUserText, known, user.id);
+          const found = await extractMemories(lastUserText, known, user.id, profile.chat_language);
           if (found.length) {
             const { data: inserted } = await supabase
               .from("memory_items")

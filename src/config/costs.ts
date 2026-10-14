@@ -13,6 +13,10 @@ export const unitCosts = {
     "claude-opus-5-5": { in: 4, out: 20 },
     "claude-sonnet-5-5": { in: 2, out: 10 },
     "claude-haiku-5-5": { in: 0.1, out: 0.5 },
+    // Estimates — check your DeepSeek / Sarvam billing pages and override.
+    "deepseek-flash": { in: n(process.env.COST_DEEPSEEK_IN_PER_M, 0.1), out: n(process.env.COST_DEEPSEEK_OUT_PER_M, 0.4) },
+    "deepseek-v4-pro": { in: n(process.env.COST_DEEPSEEK_PRO_IN_PER_M, 0.5), out: n(process.env.COST_DEEPSEEK_PRO_OUT_PER_M, 2) },
+    "sarvam-105b-conversations": { in: n(process.env.COST_SARVAM_CHAT_IN_PER_M, 0.2), out: n(process.env.COST_SARVAM_CHAT_OUT_PER_M, 0.6) },
   } as Record<string, { in: number; out: number }>,
   imagePerImage: { "fal-ai/flux/dev": n(process.env.COST_FLUX_DEV, 0.025), "fal-ai/flux/schnell": n(process.env.COST_FLUX_SCHNELL, 0.003) } as Record<string, number>,
   videoPerSecond: {

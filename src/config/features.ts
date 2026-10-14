@@ -23,10 +23,10 @@ export function getCapabilities() {
       google: auth && enabled(process.env.AUTH_GOOGLE_ENABLED),
       discord: auth && enabled(process.env.AUTH_DISCORD_ENABLED),
     } satisfies AuthMethods,
-    chat: has("AI_CHAT_API_KEY", "SUPABASE_SERVICE_ROLE_KEY"),
+    chat: has("SUPABASE_SERVICE_ROLE_KEY") && (has("AI_CHAT_API_KEY") || has("DEEPSEEK_API_KEY") || has("SARVAM_API_KEY")),
     image: (has("FAL_KEY", "SUPABASE_SERVICE_ROLE_KEY") && enabled(process.env.FEATURE_IMAGE_GEN) ? "available" : "coming_soon") as Availability,
     video: (has("FAL_KEY", "SUPABASE_SERVICE_ROLE_KEY") && enabled(process.env.FEATURE_VIDEO_GEN) ? "available" : "coming_soon") as Availability,
-    voice: ((has("SARVAM_API_KEY") || has("ELEVENLABS_API_KEY")) && has("AI_CHAT_API_KEY", "SUPABASE_SERVICE_ROLE_KEY") && enabled(process.env.FEATURE_VOICE_CALLS)
+    voice: ((has("SARVAM_API_KEY") || has("ELEVENLABS_API_KEY")) && (has("AI_CHAT_API_KEY") || has("DEEPSEEK_API_KEY") || has("SARVAM_API_KEY")) && has("SUPABASE_SERVICE_ROLE_KEY") && enabled(process.env.FEATURE_VOICE_CALLS)
       ? "available"
       : "coming_soon") as Availability,
     voiceNotes: ((has("SARVAM_API_KEY") || has("ELEVENLABS_API_KEY")) && has("SUPABASE_SERVICE_ROLE_KEY") && enabled(process.env.FEATURE_VOICE_NOTES)
