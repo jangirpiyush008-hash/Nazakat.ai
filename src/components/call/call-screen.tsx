@@ -50,6 +50,10 @@ export function CallScreen(props: {
   const phaseRef = useRef<Phase>("preflight");
   const mutedRef = useRef(false);
   const playing = useRef<AudioBufferSourceNode | null>(null);
+  /** Fallback player, unlocked on the Call tap, for browsers where Web Audio decoding fails. */
+  const fallback = useRef<HTMLAudioElement | null>(null);
+  const [needsTap, setNeedsTap] = useState(false);
+  const tapResolve = useRef<(() => void) | null>(null);
   const stopRing = useRef<(() => void) | null>(null);
   const logEnd = useRef<HTMLDivElement>(null);
 
@@ -68,6 +72,7 @@ export function CallScreen(props: {
     try {
       playing.current?.stop();
     } catch {}
+    fallback.current?.pause();
     ctx.current?.close().catch(() => {});
     if (callId.current) {
       const r = await fetch("/api/call/end", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ callId: callId.current }) }).then((x) => x.json()).catch(() => null);
@@ -122,28 +127,53 @@ export function CallScreen(props: {
     };
   };
 
-  const play = async (base64: string) => {
+  /** If the browser still blocks sound, show a "Tap to hear" button and wait for it. */
+  const unblock = () =>
+    new Promise<void>((resolve) => {
+      tapResolve.current = resolve;
+      setNeedsTap(true);
+    });
+
+  const play = async (base64: string, contentType = "audio/mpeg") => {
     const ac = ctx.current;
-    if (!ac) return;
-    const bytes = Uint8Array.from(atob(base64), (ch) => ch.charCodeAt(0));
-    const buf = await ac.decodeAudioData(bytes.buffer);
-    await ac.resume();
-    const src = ac.createBufferSource();
-    src.buffer = buf;
-    src.connect(ac.destination);
-    playing.current = src;
+    if (ac) {
+      try {
+        if (ac.state !== "running") await ac.resume();
+        if (ac.state !== "running") await unblock();
+        const bytes = Uint8Array.from(atob(base64), (ch) => ch.charCodeAt(0));
+        const buf = await ac.decodeAudioData(bytes.buffer);
+        const src = ac.createBufferSource();
+        src.buffer = buf;
+        src.connect(ac.destination);
+        playing.current = src;
+        await new Promise<void>((resolve) => {
+          src.onended = () => resolve();
+          src.start();
+        });
+        return;
+      } catch {
+        /* fall through to the audio element */
+      }
+    }
+    const el = fallback.current ?? new Audio();
+    fallback.current = el;
+    el.src = `data:${contentType};base64,${base64}`;
     await new Promise<void>((resolve) => {
-      src.onended = () => resolve();
-      src.start();
+      el.onended = () => resolve();
+      el.onerror = () => resolve();
+      el.play().catch(async () => {
+        await unblock();
+        el.play().catch(() => resolve());
+      });
     });
   };
 
-  const say = async (reply: string, audio: string) => {
+  const say = async (reply: string, audio: string, contentType?: string) => {
     history.current.push({ role: "assistant", content: reply });
     setTranscript((t) => [...t, { role: "assistant", content: reply }]);
     go("speaking");
     try {
-      await play(audio);
+      await play(audio, contentType);
     } catch {
       /* undecodable audio: the caption is still shown */
     }
@@ -174,7 +204,7 @@ export function CallScreen(props: {
     if (j.empty) return go("listening");
     history.current.push({ role: "user", content: j.heard });
     setTranscript((t) => [...t, { role: "user", content: j.heard }]);
-    await say(j.reply, j.audio);
+    await say(j.reply, j.audio, j.contentType);
   };
 
   const listen = (s: MediaStream, ac: AudioContext) => {
@@ -230,6 +260,10 @@ export function CallScreen(props: {
     // Created inside the tap so playback is allowed for the whole call.
     const ac = new AudioContext();
     ctx.current = ac;
+    // Unlock the fallback player inside the tap too (iOS needs a gesture once).
+    const el = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=");
+    el.play().catch(() => {});
+    fallback.current = el;
     await ac.resume().catch(() => {});
     go("ringing");
     stopRing.current = ring(ac);
@@ -261,7 +295,7 @@ export function CallScreen(props: {
     stopRing.current?.();
     if (phaseRef.current === "ended") return;
     listen(stream.current!, ac);
-    if (hello.ok && hello.j.audio) await say(hello.j.reply, hello.j.audio);
+    if (hello.ok && hello.j.audio) await say(hello.j.reply, hello.j.audio, hello.j.contentType);
     else go("listening");
   };
 
@@ -314,6 +348,19 @@ export function CallScreen(props: {
             </p>
           </div>
 
+          {needsTap && (
+            <button
+              type="button"
+              onClick={() => {
+                ctx.current?.resume().catch(() => {});
+                setNeedsTap(false);
+                tapResolve.current?.();
+              }}
+              className="bg-saanjh h-12 rounded-full px-6 text-sm font-semibold text-white shadow-glow"
+            >
+              🔊 Tap to hear {props.name}
+            </button>
+          )}
           {live || phase === "ringing" ? (
             <div className="flex items-center gap-5">
               <Link href={`/app/chat/${props.conversationId}`} onClick={() => hangUp()} aria-label="End call and go to chat" className="flex size-16 items-center justify-center rounded-full bg-elevated hover:bg-white/10">

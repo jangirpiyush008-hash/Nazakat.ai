@@ -47,5 +47,15 @@ export function buildMediaPrompt(kind: "image" | "video", appearance: string | n
     kind === "image"
       ? "photorealistic photo, natural skin texture, shallow depth of field, warm rim light, high detail, tasteful, adult, fully clothed or swimwear/lingerie at most, no nudity"
       : "cinematic vertical video, smooth natural motion, warm lighting, tasteful, adult, fully clothed or swimwear/lingerie at most, no nudity";
-  return `${subject}. ${userPrompt.trim()}. ${style}.`;
+  return `${subject}. ${sceneFrom(kind, userPrompt)}. ${style}.`;
+}
+
+/** Turns a chat request ("can you send me a selfie please") into a scene description. */
+function sceneFrom(kind: "image" | "video", text: string) {
+  const scene = text
+    .replace(/\b(can|could|will|would) (you|u)\b|\bplease\b|\bplz\b|\b(send|show|share|give|click|take|make|record|bhejo|bhej|dikhao|dikha)( me| mujhe)?\b|\b(i )?(want|wanna|need) (to see )?\b|\b(a|an|one|your|ur|apni|apna)\b|\b(pic|pics|photo|photos|picture|image|snap|tasveer)\b|\b(video|vid|clip|reel)\b|[?!.]+/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const base = kind === "image" ? "a natural selfie-style photo, looking at the camera with a warm smile" : "a short natural clip, looking at the camera, smiling and waving";
+  return scene.length > 3 ? `${base}, ${scene}` : base;
 }

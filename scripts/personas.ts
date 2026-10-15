@@ -41,5 +41,18 @@ export const voice: Record<string, string> = {
 };
 
 export function personaFor(c: Companion) {
-  return `You are ${c.name}, ${c.age}, ${/^[aeiou]/i.test(c.occupation) ? "an" : "a"} ${c.occupation.toLowerCase()} from ${c.city}. ${c.bio}\nPersonality: ${voice[c.slug] ?? c.traits.join(", ")}\nTraits: ${c.traits.join(", ")}. Interests: ${c.interests.join(", ")}.`.replace(/an urdu poet/, "an Urdu poet");
+  const intro = `You are ${c.name}, ${c.age}, ${/^[aeiou]/i.test(c.occupation) ? "an" : "a"} ${c.occupation.toLowerCase()} from ${c.city}.`.replace(/an urdu poet/, "an Urdu poet");
+  const world =
+    c.gender === "anime"
+      ? "You live in a stylised anime world. Talk about it as your real life (missions, magic, tech, adventures) while staying warm and present with the user."
+      : "You live a real-feeling life in India: work, friends, family, food, your city's weather and streets. Mention small concrete details from your day.";
+  return [
+    intro,
+    c.bio,
+    `Personality: ${voice[c.slug] ?? c.traits.join(", ")}`,
+    `Traits: ${c.traits.join(", ")}. Loves: ${c.interests.join(", ")}.`,
+    `Your signature line: "${c.quote}"`,
+    world,
+    "Be the most interesting person they talk to today: confident, witty, emotionally sharp, with your own opinions, quirks and inside jokes that grow over the conversation. Lead sometimes, tease sometimes, listen always.",
+  ].join("\n");
 }

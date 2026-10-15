@@ -1,0 +1,43 @@
+// Signature cover look per character: the card/hero photo. Made by editing the
+// character's main portrait, so the face stays locked. Glamorous, adult, no nudity.
+export const covers: Record<string, string> = {
+  // Women
+  meera: "in a red Banarasi silk saree with gold zari border and a sleeveless blouse, gold jhumkas, standing at a rain-washed Marine Drive at dusk, city lights behind",
+  zoya: "in a black satin slip dress with thin straps on a Hyderabad rooftop at night, fairy lights and the city glowing behind",
+  ishani: "in a white-and-red Bengali saree with a red bindi and gold jewellery during Durga Puja, warm lamp light, festive pandal behind",
+  rhea: "in a mirror-work Rajasthani ghagra choli in deep pink and gold with a sheer dupatta, inside a lantern-lit haveli courtyard at night",
+  anaya: "in an off-shoulder knit top and fitted jeans leaning on the counter of a candle-lit café at night, warm bokeh",
+  tara: "in a turquoise bikini top and a sarong wrap on a Goa beach at golden hour, surfboard beside her",
+  kiara: "in a sequinned silver evening gown with a thigh slit on a fashion-show runway, dramatic spotlight",
+  naina: "in a chic red co-ord crop top and wide trousers with statement earrings in a Delhi street-style setting at sunset",
+  sana: "in an ivory Lucknowi chikankari anarkali with a sheer dupatta and kundan earrings, in a Mughal arched corridor at golden hour",
+  aisha: "in a glittering fuchsia lehenga with a backless choli, mid-dance pose on a Bollywood sangeet stage, confetti and stage lights",
+  priya: "in a black crop top, leather jacket and headphones around her neck behind DJ decks in a neon-lit club",
+  riya: "in a fitted crimson sports bra and leggings in a sunlit boutique gym, toned and glowing",
+  myra: "in an emerald green silk saree draped elegantly with diamond jewellery on a palace terrace overlooking a lake at sunset",
+  alisha: "in a phulkari-embroidered Punjabi suit in mustard and magenta with a flowing dupatta, in golden mustard fields at sunset",
+  simran: "in a heavy red and gold bridal-style lehenga with kaleeras and choora, at a glowing wedding mandap at night",
+  nisha: "in an elegant fitted navy blazer dress at an airport lounge window at night, planes and runway lights behind",
+  diya: "in a colourful chaniya choli with mirror work, twirling during a Navratri garba night, festive lights",
+  kavya: "in a Kerala kasavu off-white and gold saree with jasmine flowers in her hair, on a houseboat in the backwaters at golden hour",
+  ira: "in a cosy cream cable-knit sweater dress by a snowy cottage window in the hills, warm fireplace glow",
+  tanya: "in a sleek black bodycon dress and red lipstick at a luxury rooftop bar at night, Gurugram skyline lights",
+  mahi: "in a bright yellow off-shoulder sundress at a colourful night food market, holding a kulhad of chai",
+  leela: "in a flowing white linen kaftan dress with jasmine in her hair on a French-colonial street in Puducherry at golden hour",
+  // Men
+  kabir: "in an ivory chikankari kurta and a Nehru jacket on an Old Delhi rooftop at dusk, kites in the sky",
+  arjun: "in a black leather jacket over a white tee leaning on a vintage motorbike on a highway at sunset",
+  dev: "in a relaxed open-collar linen shirt on a Kochi beach near Chinese fishing nets at golden hour",
+  vikram: "in a sharp charcoal three-piece suit in a glass-walled Bengaluru office at night, city lights",
+  rohan: "in a black sherwani with gold buttons at a grand wedding reception, chandeliers behind",
+  aryan: "in a fitted black athletic tank top in a modern gym, muscular arms, confident grin",
+  kunal: "in a crisp black chef's jacket in a warm restaurant kitchen with flames on the stove behind",
+  siddharth: "in a denim jacket holding an acoustic guitar on a rainy Bengaluru balcony at night, warm fairy lights",
+  // Anime (adult characters)
+  aarohi: "in a sleek white-and-violet pilot flight suit in a starship cockpit, holographic screens glowing",
+  yamini: "in a flowing midnight-blue saree with silver embroidery floating above a lantern-lit river at night",
+  kira: "in an oversized neon techwear jacket on a rainy cyberpunk street at night, holographic signs",
+  noor: "in ornate crimson-and-gold warrior queen armour with a jewelled crown on a desert palace balcony at sunset",
+  veer: "in a dark armoured knight's coat with a cape, sword at his side, on the wall of a floating sky citadel",
+  ayaan: "in a glowing racing jacket beside a futuristic motorbike on a neon highway at night",
+};

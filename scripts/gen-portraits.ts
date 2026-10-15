@@ -10,6 +10,7 @@
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import Anthropic from "@anthropic-ai/sdk";
 import { companions, type Companion } from "../src/lib/companions.ts";
+import { covers } from "./covers.ts";
 
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -29,6 +30,8 @@ const REVIEW_DIR = process.env.PORTRAIT_REVIEW_DIR || "portraits-review";
 const args = process.argv.slice(2);
 const force = args.includes("--force");
 const extrasOnly = args.includes("--extras-only");
+/** --covers: make each character's signature cover (card photo) from their locked face. */
+const coversMode = args.includes("--covers");
 const only = args.filter((a) => !a.startsWith("--"));
 const targets = companions.filter((c) => !only.length || only.includes(c.slug));
 
@@ -117,7 +120,8 @@ async function spicy(action: Record<string, unknown>) {
   for (let attempt = 0; !res; attempt++) {
     try {
       res = await fetch(`${SERVER}/api/admin/spicy`, { method: "POST", headers: { Authorization: `Bearer ${SERVICE}`, "Content-Type": "application/json" }, body: JSON.stringify(action) });
-      if (res.status >= 502 && res.status <= 504 && attempt < 30) {
+      // A real gateway error has no JSON body; our own errors (e.g. no balance) do and are final.
+      if (res.status >= 502 && res.status <= 504 && attempt < 30 && !(res.headers.get("content-type") ?? "").includes("json")) {
         res = null;
         throw new Error("gateway");
       }
@@ -232,7 +236,25 @@ const manifest = JSON.parse(await readFile(MANIFEST, "utf8").catch(() => "{}")) 
 await ensureBucket();
 const version = Date.now().toString(36);
 
+async function cover(c: Companion) {
+  const entry = manifest[c.slug];
+  const look = covers[c.slug];
+  if (!entry || !look) return console.log(`skip ${c.slug} (no main photo or no cover look yet)`);
+  if (entry.portrait.includes("/cover.jpg") && !force) return console.log(`skip ${c.slug} (cover exists; --force to redo)`);
+  console.log(`▶ cover ${c.modelId} ${c.slug}`);
+  const reference = publicUrl(`${c.slug}/main.jpg`);
+  const url = await safeImage(`${c.slug}/cover`, () =>
+    generate(FACE_MODEL, { prompt: lookPrompt(c, look), image_urls: [reference], aspect_ratio: "3:4", resolution: "2k", output_format: "jpeg" }), 0);
+  const coverUrl = `${publicUrl(await store(c.slug, "cover", url))}?v=${version}`;
+  // Cover leads; the original portrait and extra looks stay in the gallery.
+  const main = entry.portrait.includes("/main.jpg") ? entry.portrait : `${reference}?v=${version}`;
+  manifest[c.slug] = { portrait: coverUrl, gallery: [main, ...entry.gallery.filter((g) => !g.includes("/main.jpg") && !g.includes("/cover.jpg"))] };
+  await writeFile(MANIFEST, JSON.stringify(manifest, null, 2) + "\n");
+  console.log(`✓ cover ${c.modelId} ${c.slug}`);
+}
+
 async function run(c: Companion, i: number) {
+  if (coversMode) return cover(c);
   if (manifest[c.slug] && !force && !extrasOnly) return console.log(`skip ${c.modelId} ${c.slug} (exists; --force to redo)`);
   const seed = seedFor(c);
   console.log(`▶ ${c.modelId} ${c.slug} (seed ${seed})`);

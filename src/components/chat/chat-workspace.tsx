@@ -34,7 +34,15 @@ const errorCopy: Record<ErrorCode | "network", string> = {
   network: "You're offline or the connection dropped. Try again.",
 };
 
-const starters = ["How was your day?", "Tell me something about yourself", "I can't sleep tonight"];
+const starters = ["How was your day?", "Send me a selfie 📸", "I can't sleep tonight"];
+
+/** "send me a pic", "selfie bhejo", "show me a video"... → what the user is asking the character to send. */
+const askWords = /\b(send|show|share|click|take|make|record|want|wanna|see|give|bhejo|bhej|dikhao|dikha|chahiye)\b/i;
+function mediaIntent(text: string): "image" | "video" | null {
+  if (/\b(video|vid|clip|reel)s?\b/i.test(text) && askWords.test(text)) return "video";
+  if (/\bselfie\b/i.test(text) || (/\b(pic|pics|photo|photos|picture|pictures|snap|image|tasveer)\b/i.test(text) && askWords.test(text))) return "image";
+  return null;
+}
 
 export function ChatWorkspace(props: {
   conversationId: string;
@@ -163,11 +171,20 @@ export function ChatWorkspace(props: {
     }
   };
 
-  const send = (text = input) => {
+  const send = async (text = input) => {
     const t = text.trim();
     if (!t || streaming) return;
     setInput("");
-    run({ text: t });
+    await run({ text: t });
+    // Asked for a photo or video: the character replies in chat, then it arrives here.
+    const kind = mediaIntent(t);
+    if (!kind || !props.features[kind]) return;
+    const cost = kind === "image" ? sparkCosts.image : sparkCosts.video[5];
+    if (balance < cost) {
+      setToast(`A ${kind === "image" ? "photo" : "video"} costs ✦ ${cost}. Top up Sparks to get one.`);
+      return;
+    }
+    createMedia(kind, t, kind === "video" ? 5 : undefined, null, true);
   };
 
   const pollJob = async (jobId: string, placeholderId: string) => {
@@ -186,13 +203,14 @@ export function ChatWorkspace(props: {
     }
   };
 
-  const createMedia = async (kind: "image" | "video", prompt: string, duration?: VideoDuration, fromMedia?: string | null) => {
+  const createMedia = async (kind: "image" | "video", prompt: string, duration?: VideoDuration, fromMedia?: string | null, fromChat = false) => {
     setSheet(null);
     setSourceMediaId(null);
     const placeholderId = `job-${Date.now()}`;
     setMessages((m) => [
       ...m,
-      { id: `req-${Date.now()}`, role: "user", content: `${kind === "image" ? "📷" : "🎬"} ${prompt}` },
+      // From chat, the user's own message already shows the request.
+      ...(fromChat ? [] : [{ id: `req-${Date.now()}`, role: "user" as const, content: `${kind === "image" ? "📷" : "🎬"} ${prompt}` }]),
       { id: placeholderId, role: "assistant", content: "", job: { id: "", kind, duration } },
     ]);
     const res = await fetch("/api/generate", {
