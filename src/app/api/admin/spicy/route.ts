@@ -17,6 +17,8 @@ const body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("create"), model: z.string(), input: z.record(z.string(), z.unknown()), idempotencyKey: z.string().uuid() }),
   z.object({ action: z.literal("status"), taskId: z.string().min(4).max(120) }),
   z.object({ action: z.literal("check"), url: z.string().url() }),
+  /** Raw SpicyAPI text-model response, to diagnose the image checker. */
+  z.object({ action: z.literal("checkdebug"), url: z.string().url() }),
   /** Live check of the call pipeline: reply (per language) → speech → back to text. */
   z.object({ action: z.literal("selftest") }),
   /** Speech-to-text on a given recording, to check phone formats (iPhone mp4, Android webm). */
@@ -38,6 +40,18 @@ export async function POST(request: NextRequest) {
   try {
     if (parsed.data.action === "status") return NextResponse.json(await spicyStatus(parsed.data.taskId));
     if (parsed.data.action === "check") return NextResponse.json(await checkImage(parsed.data.url, null));
+    if (parsed.data.action === "checkdebug") {
+      const res = await fetch("https://api.spicyapi.ai/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${process.env.SPICYAPI_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: process.env.SPICY_IMAGE_CHECK_MODEL || "anthropic/claude-haiku-5.5/chat",
+          max_tokens: 200,
+          messages: [{ role: "user", content: [{ type: "image_url", image_url: { url: parsed.data.url } }, { type: "text", text: "Describe the clothing in five words." }] }],
+        }),
+      });
+      return NextResponse.json({ status: res.status, body: (await res.text()).slice(0, 600) });
+    }
     if (parsed.data.action === "selftest") return NextResponse.json(await selftest());
     if (parsed.data.action === "tts") {
       const v = await speak(parsed.data.text, { gender: "women", voiceId: null, chatLanguage: "hinglish", userId: null, feature: "call_tts" });
