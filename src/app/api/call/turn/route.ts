@@ -2,7 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { completeText, type Turn } from "@/server/ai/llm";
+import { streamChat, type Turn } from "@/server/ai/llm";
+import { llmCost } from "@/config/costs";
+import { trackUsage } from "@/server/usage";
 import { SAFE_REPLACEMENT, unsafeReply } from "@/server/ai/output-guard";
 import { COMPANION_RULES, contextMessage } from "@/server/ai/prompt";
 import { billCallMinutes } from "@/server/calls";
@@ -14,6 +16,14 @@ export const maxDuration = 60;
 
 const history = z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(600) })).max(12);
 const MAX_AUDIO_BYTES = 2_000_000;
+/** A finished sentence (or a long clause) ready to be spoken. */
+const SENTENCE = /^([\s\S]+?[.!?।…]+|[\s\S]{90,}?[,;:])(\s+)/;
+
+export type CallEvent =
+  | { t: "heard"; text: string; minutes: number }
+  | { t: "audio"; text: string; audio: string; contentType: string }
+  | { t: "done" }
+  | { t: "error"; code: "failed" | "partial" };
 
 /**
  * One spoken turn: bill elapsed minutes → speech-to-text → companion reply →
@@ -67,13 +77,59 @@ export async function POST(request: NextRequest) {
     while (turns.length && turns[0].role !== "user") turns.shift();
     const context =
       contextMessage({ language: profile.chat_language, memories: profile.memory_enabled ? (memories ?? []).map((m) => m.fact) : [], displayName: profile.display_name }) +
-      "\nThis is a live voice call. Reply in 1–2 short, natural spoken sentences. No emojis, lists or stage directions.";
-    const raw = await completeText({ system: `${COMPANION_RULES}\n\n${persona.system_prompt}\n\n${context}`, history: turns, language: profile.chat_language, userId: auth.user.id, feature: "call_llm", maxTokens: 800 });
-    const reply = raw && unsafeReply(raw) ? SAFE_REPLACEMENT : raw;
-    if (!reply) return NextResponse.json({ error: "refused", heard: heard.text, minutes: bill.minutes }, { status: 422 });
+      "\nThis is a live voice call. Talk like a real person on the phone: 1–2 short, natural spoken sentences, quick back-and-forth, react to what they just said. No emojis, lists, asterisks or stage directions.";
+    const voiceOpts = { gender: companion.gender, voiceId: companion.voice_id, chatLanguage: profile.chat_language, userId: auth.user.id, feature: "call_tts" as const };
+    const userId = auth.user.id;
 
-    const voice = await speak(reply, { gender: companion.gender, voiceId: companion.voice_id, chatLanguage: profile.chat_language, userId: auth.user.id, feature: "call_tts" });
-    return NextResponse.json({ heard: heard.text, reply, audio: voice.audio.toString("base64"), contentType: voice.contentType, minutes: bill.minutes });
+    // Stream: transcript first, then each sentence's audio as soon as it is spoken,
+    // so the character starts talking before the whole reply is written.
+    const encoder = new TextEncoder();
+    const body = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        const send = (e: CallEvent) => controller.enqueue(encoder.encode(JSON.stringify(e) + "\n"));
+        send({ t: "heard", text: heard.text, minutes: bill.minutes });
+        let chain = Promise.resolve();
+        const speakNext = (sentence: string) => {
+          const clean = sentence.replace(/[*_#~`]|\p{Extended_Pictographic}/gu, "").trim();
+          if (!clean) return;
+          const audio = speak(clean, voiceOpts).catch(() => null); // synthesise in parallel…
+          chain = chain.then(async () => {
+            const v = await audio; // …but send in order
+            if (v) send({ t: "audio", text: clean, audio: v.audio.toString("base64"), contentType: v.contentType });
+          });
+        };
+        let reply = "";
+        let pending = "";
+        try {
+          for await (const chunk of streamChat({ system: COMPANION_RULES, persona: persona.system_prompt, history: turns, context, language: profile.chat_language, signal: request.signal })) {
+            if (chunk.type !== "delta") {
+              trackUsage({ userId, feature: "call_llm", provider: chunk.provider, model: chunk.model, units: chunk.inputTokens + chunk.outputTokens, unit: "tokens", costUsd: llmCost(chunk.model, chunk.inputTokens, chunk.outputTokens) });
+              continue;
+            }
+            reply += chunk.text;
+            if (unsafeReply(reply)) {
+              pending = "";
+              speakNext(SAFE_REPLACEMENT);
+              break;
+            }
+            pending += chunk.text;
+            for (let m = pending.match(SENTENCE); m; m = pending.match(SENTENCE)) {
+              speakNext(m[1]);
+              pending = pending.slice(m[0].length);
+            }
+          }
+          if (pending.trim()) speakNext(pending);
+          await chain;
+          send({ t: "done" });
+        } catch (err) {
+          console.error("call_turn_error", (err as Error).message);
+          await chain;
+          send({ t: "error", code: reply ? "partial" : "failed" });
+        }
+        controller.close();
+      },
+    });
+    return new Response(body, { headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store" } });
   } catch (err) {
     console.error("call_turn_error", (err as Error).message);
     return NextResponse.json({ error: "failed", minutes: bill.minutes }, { status: 502 });

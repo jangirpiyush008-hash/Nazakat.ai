@@ -45,7 +45,7 @@ const SAFE = "adult, tasteful, no nudity";
 
 const signature: Record<Companion["gender"], string> = {
   women: "wearing a glamorous low-cut outfit in a rich colour, statement jewellery, glamorous makeup",
-  men: "wearing a well-fitted shirt, groomed, confident posture",
+  men: "wearing trendy Gen Z streetwear in a bold colour, groomed, confident posture",
   anime: "stylish outfit, confident adult pose",
 };
 
@@ -75,11 +75,11 @@ const looks: Record<"women" | "men" | "anime", string[]> = {
   ],
   men: [
     "in an open linen shirt on a beach at sunset, same hairstyle, relaxed smile",
-    "in a tailored black suit at a rooftop bar at night, city lights",
-    "in a white linen kurta in a sunlit courtyard",
+    "in an oversized graphic hoodie and cargo pants at a neon street market at night",
+    "in a pastel kurta with white sneakers at a festive Diwali party with lights",
     "in a fitted t-shirt at a gym, glowing skin, confident smile",
     "in a leather jacket leaning on a motorbike on a coastal road",
-    "in a knit sweater by a window on a rainy evening with coffee",
+    "in a varsity jacket at a rooftop party with friends and fairy lights",
   ],
 };
 

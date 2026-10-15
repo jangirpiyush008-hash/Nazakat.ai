@@ -4,19 +4,22 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { MessageCircle, Mic, MicOff, Phone, PhoneOff } from "lucide-react";
+import type { CallEvent } from "@/app/api/call/turn/route";
 
 type Phase = "preflight" | "ringing" | "listening" | "thinking" | "speaking" | "ended" | "error";
 type Turn = { role: "user" | "assistant"; content: string };
 
-const SILENCE_MS = 1000; // end of a spoken turn
+const SILENCE_MS = 750; // end of a spoken turn
+const BARGE_IN_MS = 250; // talk over the character this long to interrupt
 const MIN_SPEECH_MS = 350;
 const MIN_RING_MS = 2400; // let it ring at least once
 const LEVEL_FLOOR = 0.012;
 
 /**
- * Turn-based voice call: it rings, the character picks up and says hello,
- * then the browser listens, detects when you stop talking, sends that clip
- * and plays the spoken reply. Billing is per started minute on the server;
+ * Voice call: it rings, the character picks up and says hello, then the
+ * browser listens, detects when you stop talking and sends that clip. The
+ * reply streams back sentence by sentence and plays as it arrives; talking
+ * over the character interrupts them, like a real call. Billing is per started minute on the server;
  * audio is never stored.
  *
  * All sound goes through one AudioContext created on the Call tap, so
@@ -56,6 +59,12 @@ export function CallScreen(props: {
   const tapResolve = useRef<(() => void) | null>(null);
   const stopRing = useRef<(() => void) | null>(null);
   const logEnd = useRef<HTMLDivElement>(null);
+  /** Sentences waiting to be spoken, and the turn they belong to (stale turns are dropped). */
+  const queue = useRef<{ audio: string; contentType: string; turn: number }[]>([]);
+  const draining = useRef(false);
+  const streamDone = useRef(true);
+  const turnNo = useRef(0);
+  const spoken = useRef("");
 
   const go = (p: Phase) => {
     phaseRef.current = p;
@@ -168,25 +177,94 @@ export function CallScreen(props: {
     });
   };
 
-  const say = async (reply: string, audio: string, contentType?: string) => {
-    history.current.push({ role: "assistant", content: reply });
-    setTranscript((t) => [...t, { role: "assistant", content: reply }]);
-    go("speaking");
-    try {
-      await play(audio, contentType);
-    } catch {
-      /* undecodable audio: the caption is still shown */
+  /** Plays queued sentences in order; back to listening when the reply is finished. */
+  const drain = async () => {
+    // Held until the ring finishes; start() drains right after.
+    if (draining.current || phaseRef.current === "ringing") return;
+    draining.current = true;
+    while (queue.current.length) {
+      const item = queue.current.shift()!;
+      if (item.turn !== turnNo.current || phaseRef.current === "ended") continue;
+      go("speaking");
+      try {
+        await play(item.audio, item.contentType);
+      } catch {
+        /* undecodable audio: the caption is still shown */
+      }
     }
-    if (phaseRef.current === "speaking") go("listening");
+    draining.current = false;
+    if (streamDone.current && (phaseRef.current === "speaking" || phaseRef.current === "thinking")) finishReply();
   };
 
+  const finishReply = () => {
+    if (spoken.current) history.current.push({ role: "assistant", content: spoken.current });
+    spoken.current = "";
+    if (phaseRef.current !== "ended") go("listening");
+  };
+
+  /** Stops the character mid-sentence (barge-in) and drops the rest of the reply. */
+  const interrupt = () => {
+    turnNo.current++;
+    queue.current = [];
+    try {
+      playing.current?.stop();
+    } catch {}
+    fallback.current?.pause();
+    streamDone.current = true;
+    finishReply();
+  };
+
+  /** Sends a turn and streams the reply: transcript, then audio per sentence. */
   const turn = async (form: FormData) => {
+    const my = ++turnNo.current;
     form.append("callId", callId.current!);
     form.append("history", JSON.stringify(history.current.slice(-12)));
+    streamDone.current = false;
+    spoken.current = "";
     const res = await fetch("/api/call/turn", { method: "POST", body: form }).catch(() => null);
-    const j = res ? await res.json().catch(() => ({})) : { error: "network" };
-    if (j.minutes) setMinutes(j.minutes);
-    return { ok: Boolean(res?.ok), j };
+    if (!res || !res.ok || !res.body || (res.headers.get("content-type") ?? "").includes("application/json")) {
+      const j = res ? await res.json().catch(() => ({})) : { error: "network" };
+      streamDone.current = true;
+      if (j.minutes) setMinutes(j.minutes);
+      return { ok: Boolean(res?.ok), j };
+    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+    let bubble = false;
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done || my !== turnNo.current) break;
+      buf += decoder.decode(value, { stream: true });
+      let nl;
+      while ((nl = buf.indexOf("\n")) >= 0) {
+        const line = buf.slice(0, nl);
+        buf = buf.slice(nl + 1);
+        if (!line) continue;
+        const ev = JSON.parse(line) as CallEvent;
+        if (ev.t === "heard") {
+          if (ev.minutes) setMinutes(ev.minutes);
+          if (ev.text) {
+            history.current.push({ role: "user", content: ev.text });
+            setTranscript((t) => [...t, { role: "user", content: ev.text }]);
+          }
+        } else if (ev.t === "audio") {
+          spoken.current = `${spoken.current} ${ev.text}`.trim();
+          const text = spoken.current;
+          setTranscript((t) => (bubble ? [...t.slice(0, -1), { role: "assistant", content: text }] : [...t, { role: "assistant", content: text }]));
+          bubble = true;
+          queue.current.push({ audio: ev.audio, contentType: ev.contentType, turn: my });
+          void drain();
+        } else if (ev.t === "error" && !bubble) {
+          setTranscript((t) => [...t, { role: "assistant", content: "Sorry, I didn't catch that. Say it again?" }]);
+        }
+      }
+    }
+    if (my === turnNo.current) {
+      streamDone.current = true;
+      if (!draining.current && !queue.current.length && phaseRef.current !== "ended") finishReply();
+    }
+    return { ok: true, j: {} as Record<string, unknown> };
   };
 
   const sendTurn = async (blob: Blob) => {
@@ -198,13 +276,10 @@ export function CallScreen(props: {
     if (!ok) {
       if (j.error === "insufficient_sparks") return hangUp("You're out of Sparks, so the call ended.");
       if (j.error === "ended") return hangUp();
-      setTranscript((t) => [...t, { role: "assistant", content: j.error === "refused" ? "Let's talk about something else." : "Sorry, I didn't catch that. Say it again?" }]);
+      setTranscript((t) => [...t, { role: "assistant", content: "Sorry, I didn't catch that. Say it again?" }]);
       return go("listening");
     }
-    if (j.empty) return go("listening");
-    history.current.push({ role: "user", content: j.heard });
-    setTranscript((t) => [...t, { role: "user", content: j.heard }]);
-    await say(j.reply, j.audio, j.contentType);
+    if (j.empty) go("listening");
   };
 
   const listen = (s: MediaStream, ac: AudioContext) => {
@@ -216,6 +291,7 @@ export function CallScreen(props: {
     let lastVoice = 0;
     let noise = 0.01; // running estimate of room noise
     let frame = 0;
+    let bargeSince = 0;
 
     const startRec = () => {
       chunks.current = [];
@@ -239,6 +315,14 @@ export function CallScreen(props: {
       const canListen = phaseRef.current === "listening" && !mutedRef.current;
       const rec = recorder.current;
       const threshold = Math.max(LEVEL_FLOOR, noise * 2.5);
+      // Barge-in: clearly talking over the character (well above echo level) stops them.
+      if (phaseRef.current === "speaking" && !mutedRef.current && lvl > threshold * 3) {
+        if (!bargeSince) bargeSince = now;
+        else if (now - bargeSince > BARGE_IN_MS) {
+          bargeSince = 0;
+          interrupt();
+        }
+      } else bargeSince = 0;
       if (++frame % 6 === 0) setLevel(canListen ? Math.min(1, lvl / (threshold * 3)) : 0);
       if (canListen && lvl > threshold) {
         lastVoice = now;
@@ -288,15 +372,17 @@ export function CallScreen(props: {
     setMinutes(1);
 
     // Character picks up and speaks first.
+    // The hello is fetched while it rings, so the character speaks as soon as they pick up.
     const form = new FormData();
     form.append("greet", "1");
-    const hello = await turn(form);
+    const hello = turn(form);
     await new Promise((r) => setTimeout(r, Math.max(0, ringUntil - performance.now())));
     stopRing.current?.();
     if (phaseRef.current === "ended") return;
+    go("thinking");
     listen(stream.current!, ac);
-    if (hello.ok && hello.j.audio) await say(hello.j.reply, hello.j.audio, hello.j.contentType);
-    else go("listening");
+    void drain();
+    if (!(await hello).ok) go("listening");
   };
 
   const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
