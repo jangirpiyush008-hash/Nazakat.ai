@@ -10,10 +10,13 @@ type Phase = "preflight" | "ringing" | "listening" | "thinking" | "speaking" | "
 type Turn = { role: "user" | "assistant"; content: string };
 
 const SILENCE_MS = 750; // end of a spoken turn
-const BARGE_IN_MS = 250; // talk over the character this long to interrupt
+const BARGE_IN_MS = 400; // talk over the character this long to interrupt
+const RESUME_TIMEOUT_MS = 800; // iOS can leave AudioContext.resume() pending forever while the mic is on
+
+const withTimeout = <T,>(p: Promise<T>, ms: number) => Promise.race([p, new Promise<"timeout">((r) => setTimeout(() => r("timeout"), ms))]);
 const MIN_SPEECH_MS = 350;
 const MIN_RING_MS = 2400; // let it ring at least once
-const LEVEL_FLOOR = 0.012;
+const LEVEL_FLOOR = 0.008;
 
 /**
  * Voice call: it rings, the character picks up and says hello, then the
@@ -65,9 +68,18 @@ export function CallScreen(props: {
   const streamDone = useRef(true);
   const turnNo = useRef(0);
   const spoken = useRef("");
+  /** Call timeline sent with hang-up for debugging (phases, audio state, mic levels — never audio or words). */
+  const log = useRef<string[]>([]);
+  const t0 = useRef(0);
+  const note = (e: string) => {
+    if (log.current.length < 400) log.current.push(`${((performance.now() - t0.current) / 1000).toFixed(1)}s ${e}`);
+  };
+  const phaseSince = useRef(0);
 
   const go = (p: Phase) => {
+    if (phaseRef.current !== p) note(`phase ${p} (audio ${ctx.current?.state ?? "none"})`);
     phaseRef.current = p;
+    phaseSince.current = performance.now();
     setPhase(p);
   };
 
@@ -84,7 +96,8 @@ export function CallScreen(props: {
     fallback.current?.pause();
     ctx.current?.close().catch(() => {});
     if (callId.current) {
-      const r = await fetch("/api/call/end", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ callId: callId.current }) }).then((x) => x.json()).catch(() => null);
+      note(`hangup ${reason ?? "user"}`);
+      const r = await fetch("/api/call/end", { method: "POST", keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ callId: callId.current, log: log.current }) }).then((x) => x.json()).catch(() => null);
       if (r?.minutes) setMinutes(r.minutes);
     }
   }, []);
@@ -147,8 +160,8 @@ export function CallScreen(props: {
     const ac = ctx.current;
     if (ac) {
       try {
-        if (ac.state !== "running") await ac.resume();
-        if (ac.state !== "running") await unblock();
+        if (ac.state !== "running") await withTimeout(ac.resume(), RESUME_TIMEOUT_MS);
+        if (ac.state !== "running") throw new Error(`audio ${ac.state}`);
         const bytes = Uint8Array.from(atob(base64), (ch) => ch.charCodeAt(0));
         const buf = await ac.decodeAudioData(bytes.buffer);
         const src = ac.createBufferSource();
@@ -158,21 +171,26 @@ export function CallScreen(props: {
         await new Promise<void>((resolve) => {
           src.onended = () => resolve();
           src.start();
+          // Never wait on a stuck clip: give up a little after it should have ended.
+          setTimeout(resolve, (buf.duration + 1.5) * 1000);
         });
         return;
-      } catch {
-        /* fall through to the audio element */
+      } catch (err) {
+        note(`webaudio failed: ${(err as Error).message.slice(0, 60)}`);
       }
     }
     const el = fallback.current ?? new Audio();
     fallback.current = el;
     el.src = `data:${contentType};base64,${base64}`;
     await new Promise<void>((resolve) => {
-      el.onended = () => resolve();
-      el.onerror = () => resolve();
+      const done = () => resolve();
+      el.onended = done;
+      el.onerror = done;
+      setTimeout(done, 20_000);
       el.play().catch(async () => {
+        note("audio element blocked: asking for a tap");
         await unblock();
-        el.play().catch(() => resolve());
+        el.play().catch(done);
       });
     });
   };
@@ -283,6 +301,7 @@ export function CallScreen(props: {
   };
 
   const listen = (s: MediaStream, ac: AudioContext) => {
+    note(`listen: track ${s.getAudioTracks()[0]?.readyState} ${s.getAudioTracks()[0]?.label?.slice(0, 30) ?? ""}`);
     const analyser = ac.createAnalyser();
     analyser.fftSize = 1024;
     ac.createMediaStreamSource(s).connect(analyser);
@@ -292,6 +311,8 @@ export function CallScreen(props: {
     let noise = 0.01; // running estimate of room noise
     let frame = 0;
     let bargeSince = 0;
+    let peak = 0;
+    let lastReport = performance.now();
 
     const startRec = () => {
       chunks.current = [];
@@ -301,10 +322,12 @@ export function CallScreen(props: {
       rec.onstop = () => {
         const dur = lastVoice - speakingSince;
         const blob = new Blob(chunks.current, { type: rec.mimeType || mime || "audio/webm" });
+        note(`rec stop ${Math.round(dur)}ms ${blob.size}B`);
         if (dur >= MIN_SPEECH_MS && phaseRef.current === "listening") sendTurn(blob);
       };
       rec.start();
       recorder.current = rec;
+      note(`rec start ${rec.mimeType || mime}`);
     };
 
     const tick = () => {
@@ -315,11 +338,24 @@ export function CallScreen(props: {
       const canListen = phaseRef.current === "listening" && !mutedRef.current;
       const rec = recorder.current;
       const threshold = Math.max(LEVEL_FLOOR, noise * 2.5);
+      peak = Math.max(peak, lvl);
+      if (now - lastReport > 3000) {
+        note(`mic peak ${peak.toFixed(3)} thr ${threshold.toFixed(3)} ${phaseRef.current}`);
+        peak = 0;
+        lastReport = now;
+        // Watchdog: never stay stuck waiting on the character.
+        const stuck = now - phaseSince.current;
+        if ((phaseRef.current === "speaking" && stuck > 30_000) || (phaseRef.current === "thinking" && stuck > 25_000)) {
+          note("watchdog: back to listening");
+          interrupt();
+        }
+      }
       // Barge-in: clearly talking over the character (well above echo level) stops them.
-      if (phaseRef.current === "speaking" && !mutedRef.current && lvl > threshold * 3) {
+      if (phaseRef.current === "speaking" && !mutedRef.current && lvl > threshold * 4) {
         if (!bargeSince) bargeSince = now;
         else if (now - bargeSince > BARGE_IN_MS) {
           bargeSince = 0;
+          note("barge-in");
           interrupt();
         }
       } else bargeSince = 0;
@@ -341,6 +377,8 @@ export function CallScreen(props: {
 
   const start = async () => {
     setError(null);
+    t0.current = performance.now();
+    log.current = [];
     // Created inside the tap so playback is allowed for the whole call.
     const ac = new AudioContext();
     ctx.current = ac;
@@ -348,7 +386,8 @@ export function CallScreen(props: {
     const el = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=");
     el.play().catch(() => {});
     fallback.current = el;
-    await ac.resume().catch(() => {});
+    await withTimeout(ac.resume().catch(() => {}), RESUME_TIMEOUT_MS);
+    note(`start: audio ${ac.state}, ${navigator.userAgent.slice(0, 80)}`);
     go("ringing");
     stopRing.current = ring(ac);
     const ringUntil = performance.now() + MIN_RING_MS;
