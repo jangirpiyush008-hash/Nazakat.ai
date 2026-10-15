@@ -246,6 +246,14 @@ async function safeImage(label: string, make: (seed: number) => Promise<{ url: s
 type Entry = { portrait: string; gallery: string[] };
 const manifest = JSON.parse(await readFile(MANIFEST, "utf8").catch(() => "{}")) as Record<string, Entry>;
 await ensureBucket();
+// Pre-flight: make sure the photo checker works before paying for any image.
+{
+  const sample = Object.values(manifest)[0]?.portrait;
+  if (sample && (await check(sample)) === "unavailable") {
+    console.error("Photo checker unavailable (usually SpicyAPI balance). Nothing generated.");
+    process.exit(1);
+  }
+}
 const version = Date.now().toString(36);
 
 async function cover(c: Companion) {

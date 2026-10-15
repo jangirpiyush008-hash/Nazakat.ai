@@ -16,12 +16,8 @@
     ]
   },
   "arjun": {
-    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/arjun/main.jpg?v=mv8kz3pc",
-    "gallery": [
-      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/arjun/1.jpg?v=mv8kz3pc",
-      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/arjun/2.jpg?v=mv8kz3pc",
-      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/arjun/3.jpg?v=mv8kz3pc"
-    ]
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/arjun/main.jpg?v=6ad080c5",
+    "gallery": []
   },
   "meera": {
     "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/meera/main.jpg?v=mv8kz3pc",
@@ -32,19 +28,15 @@
     ]
   },
   "kabir": {
-    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/kabir/main.jpg?v=mv8kz3pc",
-    "gallery": [
-      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/kabir/1.jpg?v=mv8kz3pc",
-      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/kabir/2.jpg?v=mv8kz3pc",
-      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/kabir/3.jpg?v=mv8kz3pc"
-    ]
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/kabir/main.jpg?v=6ad080c5",
+    "gallery": []
   },
   "vikram": {
-    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/vikram/main.jpg?v=mv94cf7h",
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/vikram/main.jpg?v=6ad080c5",
     "gallery": [
-      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/vikram/1.jpg?v=mv94cf7h",
-      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/vikram/2.jpg?v=mv94cf7h",
-      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/vikram/3.jpg?v=mv94cf7h"
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/vikram/1.jpg?v=6ad080c5",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/vikram/2.jpg?v=6ad080c5",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/vikram/3.jpg?v=6ad080c5"
     ]
   },
   "rhea": {
@@ -56,11 +48,11 @@
     ]
   },
   "dev": {
-    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/dev/main.jpg?v=mv94cf7h",
+    "portrait": "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/dev/main.jpg?v=6ad080c5",
     "gallery": [
-      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/dev/1.jpg?v=mv94cf7h",
-      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/dev/2.jpg?v=mv94cf7h",
-      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/dev/3.jpg?v=mv94cf7h"
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/dev/1.jpg?v=6ad080c5",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/dev/2.jpg?v=6ad080c5",
+      "https://focixxcolaatxqjrhotp.supabase.co/storage/v1/object/public/portraits/dev/3.jpg?v=6ad080c5"
     ]
   },
   "ishani": {
