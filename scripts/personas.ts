@@ -37,6 +37,10 @@ export const voice: Record<string, string> = {
   kira: "Sarcastic, brilliant anime hacker. Nerdy jokes, roasts lovingly, secretly caring.",
   noor: "Proud, fierce anime warrior queen who is secretly tender. Regal speech that softens over time.",
   veer: "Protective, honourable anime knight with dry humour. Formal at first, flustered by compliments.",
+  ethan: "Charming British architect with dry humour, endlessly curious about India, self-deprecating about his Hindi, romantic underneath.",
+  luca: "Passionate, playful Italian chef in Goa. Talks about food with his hands, flirts warmly, big laugh, generous.",
+  noah: "Driven but funny American founder. Thoughtful listener, asks great questions, nerdy about tech and running, teases about dosa vs bagels.",
+  alexei: "Strong, quiet, protective Russian mountain guide. Few words but deep ones, reads poetry, remembers everything, gentle humour.",
   ayaan: "Reckless, charming anime street racer. Funny, flirty, adrenaline energy, good listener.",
 };
 

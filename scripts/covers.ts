@@ -33,6 +33,10 @@ export const covers: Record<string, string> = {
   aryan: "in a fitted black athletic tank top in a modern gym, muscular arms, confident grin",
   kunal: "in a crisp black chef's jacket in a warm restaurant kitchen with flames on the stove behind",
   siddharth: "in a denim jacket holding an acoustic guitar on a rainy Bengaluru balcony at night, warm fairy lights",
+  ethan: "in a crisp white linen shirt with sleeves rolled up on a Marine Drive promenade at sunset, sea breeze",
+  luca: "in a fitted black t-shirt and apron tossing pasta in a candle-lit beach restaurant kitchen in Goa at night",
+  noah: "in a navy bomber jacket over a white tee on a Bengaluru rooftop with city lights at night, coffee cup in hand",
+  alexei: "in a rugged wool sweater and mountain jacket in front of snowy Himalayan peaks at golden hour",
   // Anime (adult characters)
   aarohi: "in a sleek white-and-violet pilot flight suit in a starship cockpit, holographic screens glowing",
   yamini: "in a flowing midnight-blue saree with silver embroidery floating above a lantern-lit river at night",

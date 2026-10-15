@@ -1,9 +1,23 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import clsx from "clsx";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+
+export type Example = { style: "realistic" | "anime"; gender: "woman" | "man"; city: string; photo: string };
+
+/** Best example photo for the current choices: same style + gender (+ city if we have one). */
+function pickExample(examples: Example[], style: Example["style"], gender: Example["gender"], city: string) {
+  const pool = examples.filter((e) => e.style === style);
+  return (
+    pool.find((e) => e.gender === gender && e.city === city) ??
+    pool.find((e) => e.gender === gender) ??
+    pool[0] ??
+    null
+  );
+}
 
 const steps = ["Style", "Look", "Personality", "Voice", "Name"] as const;
 
@@ -69,7 +83,7 @@ function Slider({ left, right, value, onChange }: { left: string; right: string;
  * Client-side draft only. Saving needs an account and server-side checks
  * (name/likeness, age ≥ 25, moderation) that land with Milestone 3.
  */
-export function CompanionBuilder() {
+export function CompanionBuilder({ examples = [] }: { examples?: Example[] }) {
   const [step, setStep] = useState(0);
   const [d, setD] = useState(initial);
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
@@ -77,6 +91,7 @@ export function CompanionBuilder() {
     set("traits", d.traits.includes(t) ? d.traits.filter((x) => x !== t) : d.traits.length < 3 ? [...d.traits, t] : d.traits);
   const nameOk = /^[\p{L} ]{2,20}$/u.test(d.name.trim());
   const last = step === steps.length - 1;
+  const example = pickExample(examples, d.style, d.gender, d.city);
 
   return (
     <main className="mx-auto flex max-w-[880px] flex-col gap-8 px-5 py-10 md:px-8 md:py-14">
@@ -108,6 +123,8 @@ export function CompanionBuilder() {
                   : "radial-gradient(ellipse at 60% 20%, rgba(255,106,61,.5), transparent 55%), radial-gradient(ellipse at 20% 85%, rgba(255,46,126,.35), transparent 55%), linear-gradient(180deg,#2A1420,#0A0709)",
             }}
           />
+          {example && <Image key={example.photo} src={example.photo} alt="" fill sizes="220px" className="object-cover" />}
+          {example && <span className="absolute left-3 top-3 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-semibold backdrop-blur-md">Example look</span>}
           <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_50%,rgba(10,7,9,.95)_92%)]" />
           <div className="absolute inset-x-3 bottom-3">
             <div className="font-display text-xl">{d.name.trim() || "Your companion"}</div>
@@ -142,12 +159,17 @@ export function CompanionBuilder() {
                         : "radial-gradient(ellipse at 50% 25%, rgba(255,106,61,.45), transparent 60%), #141015",
                   }}
                 >
+                  {(() => {
+                    const ex = pickExample(examples, s, d.gender, d.city);
+                    return ex ? <Image src={ex.photo} alt="" fill sizes="(max-width: 768px) 45vw, 300px" className="object-cover" /> : null;
+                  })()}
+                  <span className="absolute inset-0 bg-[linear-gradient(180deg,transparent_55%,rgba(10,7,9,.9))]" />
+                  <span className="relative">{s}</span>
                   {d.style === s && (
                     <span className="bg-saanjh absolute right-3 top-3 flex size-7 items-center justify-center rounded-full text-white">
                       <Check className="size-4" />
                     </span>
                   )}
-                  {s}
                 </button>
               ))}
             </div>

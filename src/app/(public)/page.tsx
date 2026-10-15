@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { brand } from "@/config/brand";
 import { formatINR, plusOffer, weeklyPass } from "@/config/pricing";
@@ -13,14 +14,22 @@ const collage = [
   { slug: "alisha", w: 200, h: 270, left: 250, top: 330, dur: "9s", delay: "1.5s" },
 ];
 
+/** Each vibe shows a matching photo from a character's gallery (slug/file). */
 const vibes = [
-  { label: "Romantic", short: "Romantic", tint: "rgba(255,46,126,.55)" },
-  { label: "Flirty", short: "Flirty", tint: "rgba(255,106,61,.5)" },
-  { label: "Poetry", short: "Poetry", tint: "rgba(255,180,35,.45)", vibe: "Poetic" },
-  { label: "Late-night talks", short: "Late-night", tint: "rgba(255,46,126,.4)" },
-  { label: "Bollywood drama", short: "Bollywood", tint: "rgba(225,29,72,.5)" },
-  { label: "Slow-burn", short: "Slow-burn", tint: "rgba(255,106,61,.4)" },
+  { label: "Romantic", short: "Romantic", tint: "rgba(255,46,126,.55)", photo: "meera/3" },
+  { label: "Flirty", short: "Flirty", tint: "rgba(255,106,61,.5)", photo: "zoya/1" },
+  { label: "Poetry", short: "Poetry", tint: "rgba(255,180,35,.45)", vibe: "Poetic", photo: "sana/1" },
+  { label: "Late-night talks", short: "Late-night", tint: "rgba(255,46,126,.4)", photo: "tara/2" },
+  { label: "Bollywood drama", short: "Bollywood", tint: "rgba(225,29,72,.5)", photo: "tara/1" },
+  { label: "Slow-burn", short: "Slow-burn", tint: "rgba(255,106,61,.4)", photo: "zoya/2" },
 ];
+
+/** Public URL of a character photo ("slug/file"), if it has been generated. */
+function photoUrl(ref: string) {
+  const [slug] = ref.split("/");
+  const c = companions.find((x) => x.slug === slug);
+  return [c?.portrait, ...(c?.gallery ?? [])].find((u) => u?.includes(`/portraits/${ref}.jpg`)) ?? null;
+}
 
 const steps = [
   ["Pick a companion", "Original, fictional adults with their own boundaries."],
@@ -140,7 +149,11 @@ export default function HomePage() {
                 className="relative flex h-[90px] items-end overflow-hidden rounded-2xl bg-surface p-2.5 transition-transform hover:-translate-y-1 md:h-[150px] md:rounded-[20px] md:p-4"
                 style={{ backgroundImage: `radial-gradient(ellipse at 50% 0%, ${v.tint}, transparent 65%)` }}
               >
-                <span className="font-display text-[15px] md:text-xl">
+                {photoUrl(v.photo) && (
+                  <Image src={photoUrl(v.photo)!} alt="" fill sizes="(max-width: 768px) 33vw, 16vw" className="object-cover object-[50%_25%] transition-transform duration-300 hover:scale-105" />
+                )}
+                <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_35%,rgba(10,7,9,.92))]" />
+                <span className="relative font-display text-[15px] md:text-xl">
                   <span className="md:hidden">{v.short}</span>
                   <span className="max-md:hidden">{v.label}</span>
                 </span>
@@ -175,7 +188,9 @@ export default function HomePage() {
               <PrimaryLink href="/create" className="self-start">Try the builder →</PrimaryLink>
             </div>
             <div className="grid grid-cols-[110px_1fr] items-center gap-5 md:grid-cols-[140px_1fr]" aria-hidden>
-              <div className="h-[146px] rounded-2xl bg-elevated bg-[radial-gradient(ellipse_at_50%_20%,rgba(255,106,61,.5),transparent_60%)] md:h-[186px]" />
+              <div className="relative h-[146px] overflow-hidden rounded-2xl bg-elevated bg-[radial-gradient(ellipse_at_50%_20%,rgba(255,106,61,.5),transparent_60%)] md:h-[186px]">
+                {photoUrl("kiara/main") && <Image src={photoUrl("kiara/main")!} alt="" fill sizes="140px" className="object-cover" />}
+              </div>
               <div className="flex flex-col gap-3.5 text-[13px]">
                 {[
                   ["Playful", "Serious", 35],
