@@ -19,6 +19,9 @@ const body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("check"), url: z.string().url() }),
   /** Live check of the call pipeline: reply (per language) → speech → back to text. */
   z.object({ action: z.literal("selftest") }),
+  /** Speech-to-text on a given recording, to check phone formats (iPhone mp4, Android webm). */
+  z.object({ action: z.literal("tts"), text: z.string().max(300) }),
+  z.object({ action: z.literal("stt"), audio: z.string().max(3_000_000), filename: z.string().max(40), type: z.string().max(40) }),
 ]);
 
 function authorised(request: NextRequest) {
@@ -36,6 +39,14 @@ export async function POST(request: NextRequest) {
     if (parsed.data.action === "status") return NextResponse.json(await spicyStatus(parsed.data.taskId));
     if (parsed.data.action === "check") return NextResponse.json(await checkImage(parsed.data.url, null));
     if (parsed.data.action === "selftest") return NextResponse.json(await selftest());
+    if (parsed.data.action === "tts") {
+      const v = await speak(parsed.data.text, { gender: "women", voiceId: null, chatLanguage: "hinglish", userId: null, feature: "call_tts" });
+      return NextResponse.json({ audio: v.audio.toString("base64"), contentType: v.contentType });
+    }
+    if (parsed.data.action === "stt") {
+      const blob = new Blob([Buffer.from(parsed.data.audio, "base64")], { type: parsed.data.type });
+      return NextResponse.json(await transcribe(blob, parsed.data.filename, null));
+    }
     const allowed = [spicyModels.textToImage(), spicyModels.faceEdit(), spicyModels.imageToVideo()];
     if (!allowed.includes(parsed.data.model)) return NextResponse.json({ error: "model_not_allowed" }, { status: 400 });
     return NextResponse.json(await spicyCreate(parsed.data.model, parsed.data.input, parsed.data.idempotencyKey));

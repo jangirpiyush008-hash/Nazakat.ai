@@ -44,7 +44,7 @@ const STYLE = "photorealistic photograph, natural skin texture, sharp focus on t
 const SAFE = "adult, tasteful, no nudity";
 
 const signature: Record<Companion["gender"], string> = {
-  women: "wearing an elegant fitted outfit, subtle jewellery, glamorous makeup",
+  women: "wearing a glamorous low-cut outfit in a rich colour, statement jewellery, glamorous makeup",
   men: "wearing a well-fitted shirt, groomed, confident posture",
   anime: "stylish outfit, confident adult pose",
 };
