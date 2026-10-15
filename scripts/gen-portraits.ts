@@ -136,7 +136,11 @@ async function spicy(action: Record<string, unknown>) {
 }
 
 async function generate(model: string, input: Record<string, unknown>): Promise<{ url: string; nsfw: boolean }> {
-  const { taskId } = await spicy({ action: "create", model, input, idempotencyKey: crypto.randomUUID() });
+  const created = await spicy({ action: "create", model, input, idempotencyKey: crypto.randomUUID() }).catch((err: Error) => {
+    if (/40201|Insufficient balance/i.test(err.message)) stopAll = true;
+    throw err;
+  });
+  const { taskId } = created;
   for (let wait = 3000, t = 0; t < 80; t++, wait = Math.min(wait * 1.4, 10000)) {
     await new Promise((r) => setTimeout(r, wait));
     const st = await spicy({ action: "status", taskId });
@@ -215,6 +219,10 @@ async function store(slug: string, name: string, srcUrl: string) {
   return path;
 }
 
+/** The checker is down (e.g. out of balance): stop everything rather than pay for images we can't check. */
+class CheckerDown extends Error {}
+let stopAll = false;
+
 /** Generate → check → retry with a new seed (max 3 tries). */
 async function safeImage(label: string, make: (seed: number) => Promise<{ url: string; nsfw: boolean }>, seed: number) {
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -225,6 +233,10 @@ async function safeImage(label: string, make: (seed: number) => Promise<{ url: s
     }
     const blocked = await check(img.url);
     if (!blocked) return img.url;
+    if (blocked === "unavailable" || blocked === "unparseable") {
+      stopAll = true;
+      throw new CheckerDown("photo checker unavailable (check SpicyAPI balance); stopping without generating more");
+    }
     console.log(`  ${label}: image check blocked (${blocked}), retrying`);
   }
   throw new Error(`${label}: no safe image after 3 tries`);
@@ -291,7 +303,7 @@ const queue = targets.map((c) => () => run(c, companions.indexOf(c)));
 const failed: string[] = [];
 await Promise.all(
   Array.from({ length: 4 }, async () => {
-    for (let job = queue.shift(); job; job = queue.shift()) {
+    for (let job = queue.shift(); job && !stopAll; job = queue.shift()) {
       try {
         await job();
       } catch (err) {
